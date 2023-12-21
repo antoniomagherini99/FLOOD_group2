@@ -47,7 +47,7 @@ Everyone: PP presentation, report, other to be discussed.
 
 20/12/2023 – Everyone present (1.5 h). 
 - Meeting online. Discussion on work done so far by Apostolos and David (CNN setup), expected outputs and model architecture. 
-- Tasks division: Apostolos, David and Carlo working on CNN (+ data augmentation if time allows it), Lucas and Antoino working on ConvLSTM once data processing is done from CNN model. 
+- Tasks division: Apostolos, David and Carlo working on CNN (+ data augmentation if time allows it), Lucas and Antonio working on ConvLSTM once data processing is done from CNN model. 
 
 21/12/2023 - Antonio (1 h)
 - GitHub repository improvement (folders and files creation).
