@@ -6,7 +6,7 @@
 Group FLOOD2
 - Antonio Magherini - 5838215
 - David Najda - 
-- Apostolos Politis - 
+- Apostolos Politis - 5761387
 - Carlo Sobral de Vito - 
 - Lucas Terlinden-Ruhl - 
 
@@ -43,12 +43,20 @@ Everyone: PP presentation, report, other to be discussed.
 - Project introduction by Roberto, initial meeting and first share of ideas.
 
 16/12/2023 – Antonio (0.5 h). 
-- Creation of GitHub project and repository, Logbook of activities and Workplan template. 
+- Creation of GitHub project and repository, Logbook of activities and Workplan template.
+
+17/12/2023 – Apostolos (2.5 h). Studying project's given dataset and python code. Realization of given dataset structure.
+
+19/12/2023 – Apostolos and David meeting (0.5 h). Discussion about the given dataset structure. Discussion about Interaction Visualization and it's possible application on the project.
+- Apostolos (0.5h). Discussion with project's tutor about additional instructions, explanations and possible progress steps.
+- Apostolos (4h). Initial edit of given data for easier implementation on workshop's given CNN python code.
 
 20/12/2023 – Everyone present (1.5 h). 
 - Meeting online. Discussion on work done so far by Apostolos and David (CNN setup), expected outputs and model architecture. 
-- Tasks division: Apostolos, David and Carlo working on CNN (+ data augmentation if time allows it), Lucas and Antonio working on ConvLSTM once data processing is done from CNN model. 
+- Tasks division: Apostolos, David and Carlo working on CNN (+ data augmentation if time allows it), Lucas and Antonio working on ConvLSTM once data processing is done from CNN model.
+- Apostolos and David (0.5h). Discussion with project's tutor about further explanation of given dataset. Updates on current progress. Discussion about implementation of GNN models on project.
 
-21/12/2023 - Antonio (1 h)
-- GitHub repository improvement (folders and files creation).
-- Added datasets and other files from Google Drive.
+21/12/2023 - Antonio (1 h). GitHub repository improvement (folders and files creation). Added datasets and other files from Google Drive.
+- Apostolos (1h). Further edit on given data for easier implementation on workshop's given CNN python code.
+- Apostolos and David. Presentation of progress to the project's tutor and discussion about further explanation on workshop's given CNN python code.
+- Apostolos, David and Calro (6h). Finalization of given dataset edit. Implementation on workshop's given CNN python code. First draft CNN model (single step prediction).
