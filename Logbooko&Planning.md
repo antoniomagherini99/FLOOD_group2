@@ -8,7 +8,7 @@ Group FLOOD2
 - David Najda - 
 - Apostolos Politis - 5761387
 - Carlo Sobral de Vito - 
-- Lucas Terlinden-Ruhl - 
+- Lucas Terlinden-Ruhl - 5863937
 
 **Project title**:
 Spatio-temporal flood modelling with Deep Learning
@@ -60,3 +60,10 @@ Everyone: PP presentation, report, other to be discussed.
 - Apostolos (1h). Further edit on given data for easier implementation on workshop's given CNN python code.
 - Apostolos and David. Presentation of progress to the project's tutor and discussion about further explanation on workshop's given CNN python code.
 - Apostolos, David and Calro (6h). Finalization of given dataset edit. Implementation on workshop's given CNN python code. First draft CNN model (single step prediction).
+
+22/12/2023 - Anotonio and Lucas (6h)
+- Read literature to find a conv LSTM model that used pytorch on github
+- Looked through the git folders to see what had been accomplished by other members
+- Started implementing cnn model into git, not completed, work can be seen on a seperate branch
+- Worked on pre processing all the inputs and targets (including discharge) for all samples and time steps
+- Started working on encoding and decoding the csv files to reduce running time of processing the data
