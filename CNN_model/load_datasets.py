@@ -1,12 +1,15 @@
+import numpy
+import torch
+
 # file for storing functions used for loading datasets
-# 1st version - Antonio
+# 1st version - Antonio, Lucas updated file paths and imports
 
 # The following paths access the main folder (i.e., dataset_train_val, dataset1 and so on). 
 # The path of the specific type of data (DEM, VX and so on) is to be specified after.
-path_train = f'./dataset_train_val/' 
-path_test1 = f'./dataset1/'
-path_test2 = f'./dataset2/'
-path_test3 = f'./dataset3/'
+path_train = f'../dataset_train_val/' 
+path_test1 = f'../dataset1/'
+path_test2 = f'../dataset2/'
+path_test3 = f'../dataset3/'
 
 # ------------- #
 
@@ -20,14 +23,14 @@ test3 = 'test3'
 
 # ------------- #
 
-def process_elevation_data(file_id, train_val_test):
+def process_elevation_data(file_id, train_val_test = 'train_val'):
     """
     Processes elevation data from a DEM file.
 
     Input:
     file_id (str): Identifier of the DEM file to be processed.
     train_val_test: key for specifying what we are using the model for
-                   'train_val' = train and validate the model
+                   Default: 'train_val' = train and validate the model
                    'test1' = test the model with dataset 1
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
@@ -38,19 +41,19 @@ def process_elevation_data(file_id, train_val_test):
     # specify what we use the model for -- so far works for only one specified input (i.e., file_id), 
     # will need to be improved to work for all inputs regardless of the number of the file
     if train_val_test == 'train_val':
-        file_path = path_train + f'DEM_{file_id}.txt'
+        file_path = path_train + f'DEM/DEM_{file_id}.txt'
     elif train_val_test == 'test1':
-        file_path = path_test1 + f'DEM_{file_id}.txt'
+        file_path = path_test1 + f'DEM/DEM_{file_id}.txt'
     elif train_val_test == 'test2':
-        file_path = path_test2 + f'DEM_{file_id}.txt'
+        file_path = path_test2 + f'DEM/DEM_{file_id}.txt'
     elif train_val_test == 'test3':
-        file_path = path_test3 + f'DEM_{file_id}.txt'
+        file_path = path_test3 + f'DEM/DEM_{file_id}.txt'
 
     # # Construct the file path from the given file identifier
     # file_path = f'DEM_{file_id}.txt'
 
     # Load the elevation data from the file
-    elevation_data = np.loadtxt(file_path)
+    elevation_data = numpy.loadtxt(file_path)
 
     # Reshape the elevation data into a 64x64 grid
     elevation_grid = elevation_data[:, 2].reshape(64, 64)
@@ -68,7 +71,7 @@ def process_elevation_data(file_id, train_val_test):
 
 # ------------- #
 
-    def process_water_depth(file_id, train_val_test, time_step=0):
+def process_water_depth(file_id, train_val_test = 'train_val', time_step=0):
     """
     Processes water depth data from a specific time step in a file.
 
@@ -87,13 +90,13 @@ def process_elevation_data(file_id, train_val_test):
     # specify what we use the model for -- so far works for only one specified input (i.e., file_id), 
     # will need to be improved to work for all inputs regardless of the number of the file
     if train_val_test == 'train_val':
-        file_path = path_train + f'WD_{file_id}.txt'
+        file_path = path_train + f'WD/WD_{file_id}.txt'
     elif train_val_test == 'test1':
-        file_path = path_test1 + f'WD_{file_id}.txt'
+        file_path = path_test1 + f'WD/WD_{file_id}.txt'
     elif train_val_test == 'test2':
-        file_path = path_test2 + f'WD_{file_id}.txt'
+        file_path = path_test2 + f'WD/WD_{file_id}.txt'
     elif train_val_test == 'test3':
-        file_path = path_test3 + f'WD_{file_id}.txt'
+        file_path = path_test3 + f'WD/WD_{file_id}.txt'
     
     # file_path = f'WD_{file_id}.txt'
 
