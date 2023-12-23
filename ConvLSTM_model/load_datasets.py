@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 
-from numba import jit, prange, njit
+from numba import jit, prange
 
 # The following paths access the main folder (i.e., dataset_train_val, dataset1 and so on). 
 # The path of the specific type of data (DEM, VX and so on) is to be specified after.
@@ -76,7 +76,6 @@ def process_elevation_data(file_id, train_val_test='train_val'):
 
 # ------------- #
 
-# @njit
 def process_water_depth(file_id, train_val_test='train_val', time_step=0):
     """
     Processes water depth data from a specific time step in a file.
@@ -124,7 +123,6 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
 
 # ------------- #
 
-# @njit
 def process_velocities(file_id, train_val_test='train_val', time_step=0):
     """
     Processes elevation data from a DEM file.
@@ -189,7 +187,6 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
 
 # ------------- #
 
-# @njit  
 def compute_targets(file_id, train_val_test = 'train_val', time_step = 0):
     """
     Use process_velocities and process_water_depth to compute discharge
@@ -216,7 +213,7 @@ def compute_targets(file_id, train_val_test = 'train_val', time_step = 0):
 
 # ------------- #
 
-# @jit(nopython=False, parallel=True)
+# @jit(parallel=True)
 def load_all_boys(train_val_test, time=97):
     '''
     Load all "file_id" and "time_step" for chosen dataset
