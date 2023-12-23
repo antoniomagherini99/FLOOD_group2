@@ -1,6 +1,15 @@
 # file for storing functions used for plotting results
 # 1st version - Antonio
 
+import torch
+import imageio
+import os
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from PIL import Image
+
 def plot_dataset_tensors(tensors, file_number, titles):
     """
     Plots a series of data tensors.
@@ -52,5 +61,3 @@ with imageio.get_writer(movie_path, fps=3) as writer:
     # Optionally, remove the individual image files after creating the movie
     # for filename in filenames:
     #     os.remove(filename)
-
-    return None
