@@ -8,6 +8,15 @@ import imageio
 
 output_dir = f'../WD_Training_Dataset_Movie'
 
+import torch
+import imageio
+import os
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from PIL import Image
+
 def plot_dataset_tensors(tensors, file_number, titles):
     """
     Plots a series of data tensors.
