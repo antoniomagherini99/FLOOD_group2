@@ -91,4 +91,8 @@ Everyone: PP presentation, report, other to be discussed.
 
 23/12/2023 
 - Antonio (4 h). 
-1. Finalization of input data preprocessing (for training/validation dataset)
+1. Input data preprocessing (for training/validation dataset)
+
+24/12/2023
+- Lucas and Antonio (2.5 h).
+1. Automatization of input data processing for all other datasets

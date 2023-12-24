@@ -1,5 +1,12 @@
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+import imageio
 # file for storing functions used for plotting results
-# 1st version - Antonio
+# 1st version - Antonio, Lucas updated file paths and imports
+
+output_dir = f'../WD_Training_Dataset_Movie'
 
 import torch
 import imageio
@@ -46,6 +53,8 @@ def resize_image(image, target_shape):
     resized_image = image_pil.resize((target_shape[1], target_shape[0]), Image.ANTIALIAS)
     return np.array(resized_image)
 
+
+
 movie_path = os.path.join(output_dir, 'WD_Training_Dataset_Movie.mp4')
 first_image = imageio.imread(filenames[1])
 image_shape = first_image.shape
@@ -61,3 +70,5 @@ with imageio.get_writer(movie_path, fps=3) as writer:
     # Optionally, remove the individual image files after creating the movie
     # for filename in filenames:
     #     os.remove(filename)
+
+    # return None
