@@ -7,7 +7,8 @@ import re
 
 import numpy as np
 
-#from numba import jit, prange
+#from numba import jit, prange  
+
 
 def retrieve_path(train_val_test):
     """
@@ -36,6 +37,39 @@ def retrieve_path(train_val_test):
 
 # ------------- #
 
+def count_pixels(file_id, train_val_test):
+    """
+    Calculate the number of pixels contained in row/column of image
+
+    Parameters
+    ----------
+    file_id : int
+        Identifier of the DEM file to be processed.
+    train_val_test : str
+        key for specifying what we are using the model for
+            'train_val' = train and validate the model
+            'test1' = test the model with dataset 1
+            'test2' = test the model with dataset 2
+            'test3' = test the model with dataset 3
+
+    Returns
+    -------
+    pixel_square : int
+        Number of pixels in a row/column of the image.
+
+    """
+    dir_path = retrieve_path(train_val_test)
+    file_path = dir_path + f'DEM/DEM_{file_id}.txt' # arbitrary to choose DEM
+    
+    elevation_data = np.loadtxt(file_path)
+
+    tot_pixels = len(elevation_data[:, 2])
+    pixel_square = int(np.sqrt(tot_pixels)) # Image is always a square
+    return pixel_square
+    
+
+# ------------- #
+
 # The following lines create variables to more easily specify what we use the model for 
 # (i.e., train and validate, test with dataset 1 and so on) in the following functions.
 
@@ -47,17 +81,19 @@ test3 = 'test3'
 # ------------- #
 
 # @njit
-def process_elevation_data(file_id, train_val_test='train_val'):
+def process_elevation_data(file_id, train_val_test='train_val', pixel_square = 64):
     """
     Processes elevation data from a DEM file.
 
     Input:
-    file_id (str): Identifier of the DEM file to be processed.
+    file_id (int): Identifier of the DEM file to be processed.
     train_val_test: key for specifying what we are using the model for
                    'train_val' = train and validate the model
                    'test1' = test the model with dataset 1
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
+    pixel_square : int
+        Number of pixels in a row/column of the image.
 
     Output:
     torch.Tensor: A tensor combining the original elevation data and its slope in x and y directions.
@@ -73,8 +109,8 @@ def process_elevation_data(file_id, train_val_test='train_val'):
     # Load the elevation data from the file
     elevation_data = np.loadtxt(file_path)
 
-    # Reshape the elevation data into a 64x64 grid
-    elevation_grid = elevation_data[:, 2].reshape(64, 64)
+    # Reshape the elevation data into a square grid
+    elevation_grid = elevation_data[:, 2].reshape(pixel_square, pixel_square)
 
     # Convert the elevation grid to a PyTorch tensor
     elevation_tensor = torch.tensor(elevation_grid)
@@ -89,7 +125,7 @@ def process_elevation_data(file_id, train_val_test='train_val'):
 
 # ------------- #
 
-def process_water_depth(file_id, train_val_test='train_val', time_step=0):
+def process_water_depth(file_id, train_val_test='train_val', time_step=0, pixel_square = 64):
     """
     Processes water depth data from a specific time step in a file.
 
@@ -101,6 +137,8 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
     time_step (int): Time step to extract from the file. Default is the first time step. Default is the first time step.
+    pixel_square : int
+        Number of pixels in a row/column of the image.
 
     Returns:
     torch.Tensor or None: A 64x64 tensor representing water depth at the given time step, or None if the data is invalid.
@@ -119,9 +157,9 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
         selected_row = lines[time_step].split()
         depth_values = [float(val) for val in selected_row]
 
-        # Validate and reshape the data into a 64x64 tensor
-        if len(depth_values) == 64 * 64:
-            depth_tensor = torch.tensor(depth_values).view(64, 64)
+        # Validate and reshape the data into a square tensor
+        if len(depth_values) == pixel_square * pixel_square:
+            depth_tensor = torch.tensor(depth_values).view(pixel_square, pixel_square)
             return depth_tensor
         else:
             raise ValueError(f"The number of elements in {file_path} at time step {time_step} doesn't match a 64x64 matrix.")
@@ -130,7 +168,7 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
 
 # ------------- #
 
-def process_velocities(file_id, train_val_test='train_val', time_step=0):
+def process_velocities(file_id, train_val_test='train_val', time_step=0, pixel_square = 64):
     """
     Processes elevation data from a DEM file.
 
@@ -142,6 +180,8 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
     time_step (int): Time step to extract from the file. Default is the first time step. Default is the first time step.
+    pixel_square : int
+        Number of pixels in a row/column of the image.
 
     Output:
     torch.Tensor: A tensor combining the original elevation data and its slope in x and y directions.
@@ -168,9 +208,9 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
         vel_y = [float(val) for val in selected_row_y]
 
         # Validate and reshape the data into a 64x64 tensor
-        if (len(vel_x) == 64 * 64) and (len(vel_y) == 64 * 64):
-            vel_x = torch.tensor(vel_x).view(64, 64)
-            vel_y = torch.tensor(vel_y).view(64, 64)
+        if (len(vel_x) == pixel_square * pixel_square) and (len(vel_y) == pixel_square * pixel_square):
+            vel_x = torch.tensor(vel_x).view(pixel_square, pixel_square)
+            vel_y = torch.tensor(vel_y).view(pixel_square, pixel_square)
             return vel_x, vel_y
         else:
             raise ValueError(f"The number of elements in {file_path_x} or {file_path_y} at time step {time_step} doesn't match a 64x64 matrix.")
@@ -179,7 +219,7 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
 
 # ------------- #
 
-def compute_targets(file_id, train_val_test = 'train_val', time_step = 0):
+def compute_targets(file_id, train_val_test = 'train_val', time_step = 0, pixel_square = 64):
     """
     Use process_velocities and process_water_depth to compute discharge
 
@@ -190,12 +230,14 @@ def compute_targets(file_id, train_val_test = 'train_val', time_step = 0):
                    'test1' = test the model with dataset 1
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
+    pixel_square : int
+        Number of pixels in a row/column of the image.
 
     Output:
     targets: A torch.tensor which is 2 x 64 x 64. Both targets are water depth and discharge respectively
     """
-    water_depth = process_water_depth(file_id, train_val_test, time_step)
-    vx, vy = process_velocities(file_id, train_val_test, time_step)
+    water_depth = process_water_depth(file_id, train_val_test, time_step, pixel_square)
+    vx, vy = process_velocities(file_id, train_val_test, time_step, pixel_square)
 
     magnitude = torch.sqrt(vx**2 + vy**2)
     discharge = water_depth * magnitude # per meter width
@@ -226,18 +268,25 @@ def load_all_boys(train_val_test, time=97):
     count = 0
     dir_path = file_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
     for path in os.listdir(dir_path):
+        if count == 0:
+            file_number = re.search(r'\d{1,5}', path)
+            pixel_square = count_pixels(int(file_number.group()), train_val_test)
+        else:
+            None
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
-    inputs = torch.zeros((count, 3, 64, 64))
-    targets = torch.zeros((count, time, 2, 64, 64))
+        else:
+            None
+    inputs = torch.zeros((count, 3, pixel_square, pixel_square))
+    targets = torch.zeros((count, time, 2, pixel_square, pixel_square))
 
     i = 0
     for path in os.listdir(dir_path):
         file_number = re.search(r'\d{1,5}', path)
         print(file_number)
         print(int(file_number.group()))
-        inputs[i] = process_elevation_data(int(file_number.group()), train_val_test)
+        inputs[i] = process_elevation_data(int(file_number.group()), train_val_test, pixel_square)
         for t in range(time):
-            targets[i, t] = compute_targets(int(file_number.group()), train_val_test, time_step = t)
+            targets[i, t] = compute_targets(int(file_number.group()), train_val_test, time_step = t, pixel_square = pixel_square)
         i += 1
     return inputs, targets
