@@ -3,17 +3,36 @@
 
 import torch 
 import os
+import re
 
 import numpy as np
 
-from numba import jit, prange
+#from numba import jit, prange
 
-# The following paths access the main folder (i.e., dataset_train_val, dataset1 and so on). 
-# The path of the specific type of data (DEM, VX and so on) is to be specified after.
-path_train = f'../dataset_train_val/' 
-path_test1 = f'../dataset1/'
-path_test2 = f'../dataset2/'
-path_test3 = f'../dataset3/'
+def retrieve_path(train_val_test):
+    """
+    Retrieve the path of a given data folder using a predefined dictionary
+    
+    Parameters
+    ----------
+    train_val_test : str
+        Identifier of dictionary. Expects:
+            'train_val', 'test1', 'test2', 'test3'.
+
+    Returns
+    -------
+    path : str
+        path of datafolder.
+
+    """
+    path_dictionary = {
+        'train_val': '../dataset_train_val/',
+        'test1': '../dataset1/',
+        'test2': '../dataset2/',
+        'test3': '../dataset3/'
+        }
+    path = path_dictionary[train_val_test]
+    return path
 
 # ------------- #
 
@@ -45,14 +64,8 @@ def process_elevation_data(file_id, train_val_test='train_val'):
     """
     # specify what we use the model for -- so far works for only one specified input (i.e., file_id), 
     # will need to be improved to work for all inputs regardless of the number of the file
-    if train_val_test == 'train_val':
-        file_path = path_train + f'DEM/DEM_{file_id}.txt'
-    elif train_val_test == 'test1':
-        file_path = path_test1 + f'DEM/DEM_{file_id}.txt'
-    elif train_val_test == 'test2':
-        file_path = path_test2 + f'DEM/DEM_{file_id}.txt'
-    elif train_val_test == 'test3':
-        file_path = path_test3 + f'DEM/DEM_{file_id}.txt'
+    dir_path = retrieve_path(train_val_test)
+    file_path = dir_path + f'DEM/DEM_{file_id}.txt'
 
     # # Construct the file path from the given file identifier
     # file_path = f'DEM_{file_id}.txt'
@@ -94,14 +107,8 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
     """
     # specify what we use the model for -- so far works for only one specified input (i.e., file_id), 
     # will need to be improved to work for all inputs regardless of the number of the file
-    if train_val_test == 'train_val':
-        file_path = path_train + f'WD/WD_{file_id}.txt'
-    elif train_val_test == 'test1':
-        file_path = path_test1 + f'WD/WD_{file_id}.txt'
-    elif train_val_test == 'test2':
-        file_path = path_test2 + f'WD/WD_{file_id}.txt'
-    elif train_val_test == 'test3':
-        file_path = path_test3 + f'WD/WD_{file_id}.txt'
+    dir_path = retrieve_path(train_val_test)
+    file_path = dir_path + f'WD/WD_{file_id}.txt'
 
     # Read the file
     with open(file_path, 'r') as file:
@@ -141,24 +148,9 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
     """
     # specify what we use the model for -- so far works for only one specified input (i.e., file_id), 
     # will need to be improved to work for all inputs regardless of the number of the file
-    if train_val_test == 'train_val':
-        file_path_x = path_train + f'VX/VX_{file_id}.txt'
-        file_path_y = path_train + f'VY/VY_{file_id}.txt'
-    
-    elif train_val_test == 'test1':
-        file_path_x = path_train + f'VX/VX_{file_id}.txt'
-        file_path_y = path_train + f'VY/VY_{file_id}.txt'
-    
-    elif train_val_test == 'test2':
-        file_path_x = path_train + f'VX/VX_{file_id}.txt'
-        file_path_y = path_train + f'VY/VY_{file_id}.txt'
-    
-    elif train_val_test == 'test3':
-        file_path_x = path_train + f'VX/VX_{file_id}.txt'
-        file_path_y = path_train + f'VY/VY_{file_id}.txt'
-
-    # Load the elevation data from the file
-    vx, vy = np.loadtxt(file_path_x), np.loadtxt(file_path_y)
+    dir_path = retrieve_path(train_val_test)
+    file_path_x = dir_path + f'VX/VX_{file_id}.txt'
+    file_path_y = dir_path + f'VY/VY_{file_id}.txt'
 
     # Read the file
     with open(file_path_x, 'r') as file:
@@ -229,14 +221,7 @@ def load_all_boys(train_val_test, time=97):
     targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
              Shape is samples x time steps x 2 x 64 x 64
     '''
-    if train_val_test == 'train_val':
-        file_path = path_train
-    elif train_val_test == 'test1':
-        file_path = path_test1
-    elif train_val_test == 'test2':
-        file_path = path_test2
-    elif train_val_test == 'test3':
-        file_path = path_test3
+    file_path = retrieve_path(train_val_test)
     
     count = 0
     dir_path = file_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
@@ -246,9 +231,13 @@ def load_all_boys(train_val_test, time=97):
     inputs = torch.zeros((count, 3, 64, 64))
     targets = torch.zeros((count, time, 2, 64, 64))
 
-    for i in range(count):
-        print(i)
-        inputs[i] = process_elevation_data(i + 1, train_val_test)
+    i = 0
+    for path in os.listdir(dir_path):
+        file_number = re.search(r'\d{1,5}', path)
+        print(file_number)
+        print(int(file_number.group()))
+        inputs[i] = process_elevation_data(int(file_number.group()), train_val_test)
         for t in range(time):
             targets[i, t] = compute_targets(i + 1, train_val_test, time_step = t)
+        i += 1
     return inputs, targets
