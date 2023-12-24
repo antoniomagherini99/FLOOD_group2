@@ -94,5 +94,6 @@ Everyone: PP presentation, report, other to be discussed.
 1. Input data preprocessing (for training/validation dataset)
 
 24/12/2023
-- Lucas and Antonio (2.5 h).
+- Lucas and Antonio (3.5 h).
 1. Automatization of input data processing for all other datasets
+2. Includes git debugging to merge branches
