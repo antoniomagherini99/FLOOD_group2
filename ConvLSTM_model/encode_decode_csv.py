@@ -1,8 +1,9 @@
 import pandas as pd
 import torch
 import os
+import re
 
-from load_datasets import retrieve_path
+from load_datasets import retrieve_path, count_pixels
 
 def encode_into_csv(inputs, targets, train_val_test):
     """
@@ -39,7 +40,7 @@ def encode_into_csv(inputs, targets, train_val_test):
     n = int(n_tot / 4)
     
     # Definetely a way to automate this with a for loop
-    if train_val_test == 'train_val':
+    if train_val_test in ('train_val', 'test2', 'test3'):
         df_targets[:n].to_csv(dir_path + train_val_test + '_tar1.csv', index=False)
         df_targets[n:2*n].to_csv(dir_path + train_val_test + '_tar2.csv', index=False)
         df_targets[2*n:3*n].to_csv(dir_path + train_val_test + '_tar3.csv', index=False)
@@ -58,24 +59,26 @@ def decode_from_csv(train_val_test):
 
     Output:
     inputs: torch.Tensor which contains DEM, slope x and y for all files in a dataset
-            Shape is samples x 3 x 64 x 64
+            Shape is samples x 3 x pixel_square
     targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
-            Shape is samples x time steps x 2 x 64 x 64
+            Shape is samples x time steps x 2 x pixel_square x pixel_square
     """
-    df_inputs = pd.read_csv(train_val_test + '_in.csv')
+    dir_path = retrieve_path(train_val_test)
+    
+    df_inputs = pd.read_csv(dir_path + train_val_test + '_in.csv')
     
     # if train_val_test = 'train_val' targets file is too big to be loaded in GitHub
     # and it needs to be split into 4 different .csv files
-    if train_val_test == 'train_val':
-        df_targets1 = pd.read_csv(train_val_test + '_tar1.csv')
-        df_targets2 = pd.read_csv(train_val_test + '_tar2.csv')
-        df_targets3 = pd.read_csv(train_val_test + '_tar3.csv')
-        df_targets4 = pd.read_csv(train_val_test + '_tar4.csv')
+    if train_val_test in ('train_val', 'test2', 'test3'):
+        df_targets1 = pd.read_csv(dir_path + train_val_test + '_tar1.csv')
+        df_targets2 = pd.read_csv(dir_path + train_val_test + '_tar2.csv')
+        df_targets3 = pd.read_csv(dir_path + train_val_test + '_tar3.csv')
+        df_targets4 = pd.read_csv(dir_path + train_val_test + '_tar4.csv')
 
         df_targets = pd.concat([df_targets1, df_targets2, 
                                 df_targets3, df_targets4], axis=0) 
     else:
-        df_targets = pd.read_csv(train_val_test + '_tar.csv')
+        df_targets = pd.read_csv(dir_path + train_val_test + '_tar.csv')
 
     # Convert the DataFrame to a PyTorch tensor
     restored_inputs = torch.tensor(df_inputs.values)
@@ -85,11 +88,18 @@ def decode_from_csv(train_val_test):
     count = 0
     dir_path = retrieve_path(train_val_test) + 'DEM/' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
     for path in os.listdir(dir_path):
+        if count == 0:
+            file_number = re.search(r'\d{1,5}', path)
+            pixel_square = count_pixels(int(file_number.group()), train_val_test)
+        else:
+            None
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
+        else:
+            None
 
-    shape_inputs = (count, 3, 64, 64)
-    shape_targets = (count, 97, 2, 64, 64)
+    shape_inputs = (count, 3, pixel_square, pixel_square)
+    shape_targets = (count, 97, 2, pixel_square, pixel_square)
 
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
