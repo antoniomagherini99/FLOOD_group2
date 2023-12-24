@@ -48,7 +48,7 @@ def process_elevation_data(file_id, train_val_test='train_val'):
     if train_val_test == 'train_val':
         file_path = path_train + f'DEM/DEM_{file_id}.txt'
     elif train_val_test == 'test1':
-        file_path = path_test1 + f'DEM/DEM_{file_id}.txt'
+        file_path = path_test1 + f'DEM/DEM_50{file_id}.txt'
     elif train_val_test == 'test2':
         file_path = path_test2 + f'DEM/DEM_{file_id}.txt'
     elif train_val_test == 'test3':
@@ -97,7 +97,7 @@ def process_water_depth(file_id, train_val_test='train_val', time_step=0):
     if train_val_test == 'train_val':
         file_path = path_train + f'WD/WD_{file_id}.txt'
     elif train_val_test == 'test1':
-        file_path = path_test1 + f'WD/WD_{file_id}.txt'
+        file_path = path_test1 + f'WD/WD_50{file_id}.txt'
     elif train_val_test == 'test2':
         file_path = path_test2 + f'WD/WD_{file_id}.txt'
     elif train_val_test == 'test3':
@@ -146,8 +146,8 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0):
         file_path_y = path_train + f'VY/VY_{file_id}.txt'
     
     elif train_val_test == 'test1':
-        file_path_x = path_train + f'VX/VX_{file_id}.txt'
-        file_path_y = path_train + f'VY/VY_{file_id}.txt'
+        file_path_x = path_train + f'VX/VX_50{file_id}.txt'
+        file_path_y = path_train + f'VY/VY_50{file_id}.txt'
     
     elif train_val_test == 'test2':
         file_path_x = path_train + f'VX/VX_{file_id}.txt'
