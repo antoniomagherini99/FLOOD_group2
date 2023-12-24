@@ -238,6 +238,6 @@ def load_all_boys(train_val_test, time=97):
         print(int(file_number.group()))
         inputs[i] = process_elevation_data(int(file_number.group()), train_val_test)
         for t in range(time):
-            targets[i, t] = compute_targets(i + 1, train_val_test, time_step = t)
+            targets[i, t] = compute_targets(int(file_number.group()), train_val_test, time_step = t)
         i += 1
     return inputs, targets
