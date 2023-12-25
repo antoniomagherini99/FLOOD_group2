@@ -99,7 +99,8 @@ Everyone: PP presentation, report, other to be discussed.
 2. Includes git debugging to merge branches
 
 25/12/23
-- Lucas (2 h)
+- Lucas (4 h)
 1. Wokred on post processing the data to ensure data made sense
 2. Animation script can be found in conv lstm notebook. Skeleton should be solid. Only need to add more subplots and change the colors.
    To do: Might need to transform into a class to automate calling it.
+3. Started working on initializing the conv lstm model
