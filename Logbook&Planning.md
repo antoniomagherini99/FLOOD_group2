@@ -97,3 +97,9 @@ Everyone: PP presentation, report, other to be discussed.
 - Lucas and Antonio (3.5 h).
 1. Automatization of input data processing for all other datasets
 2. Includes git debugging to merge branches
+
+25/12/23
+- Lucas (2 h)
+1. Wokred on post processing the data to ensure data made sense
+2. Animation script can be found in conv lstm notebook. Skeleton should be solid. Only need to add more subplots and change the colors.
+   To do: Might need to transform into a class to automate calling it.
