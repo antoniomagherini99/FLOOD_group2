@@ -61,7 +61,7 @@ def decode_from_csv(train_val_test):
     inputs: torch.Tensor which contains DEM, slope x and y for all files in a dataset
             Shape is samples x 3 x pixel_square
     targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
-            Shape is samples x time steps x 2 x pixel_square x pixel_square
+            Shape is samples x 2 x time_steps x pixel_square x pixel_square
     """
     dir_path = retrieve_path(train_val_test)
     
@@ -104,6 +104,8 @@ def decode_from_csv(train_val_test):
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
     targets = torch.reshape(restored_targets, shape_targets)
+    
+    targets = targets.permute(0, 2, 1, 3, 4) # to have a similar shape as inputs
 
     # Print the shapes of the restored tensors
     print("Restored inputs Shape:", inputs.shape)
