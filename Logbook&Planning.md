@@ -104,3 +104,8 @@ Everyone: PP presentation, report, other to be discussed.
 2. Animation script can be found in conv lstm notebook. Skeleton should be solid. Only need to add more subplots and change the colors.
    To do: Might need to transform into a class to automate calling it.
 3. Started working on initializing the conv lstm model
+
+26/12/23
+- Lucas (2h)
+1. Worked on train_epoch function for conv lstm model. Not yet functional, but model understands first inputs.
+   Having difficulty using the previous outputs as new inputs
