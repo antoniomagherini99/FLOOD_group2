@@ -109,3 +109,15 @@ Everyone: PP presentation, report, other to be discussed.
 - Lucas (2h)
 1. Worked on train_epoch function for conv lstm model. Not yet functional, but model understands first inputs.
    Having difficulty using the previous outputs as new inputs
+
+30/12/23
+- Apostolos (2h)
+1. First attempt on finalizing the first CNN model with 96 outputs instead of 1
+
+31/12/23
+- Apostolos (3h)
+1. First CNN model with 96 outputs working correctly.
+
+1/1/24
+- Apostolos (3h)
+1. Running the first working CNN model multiple times for 48 outputs, figuring out which settings improve the quality of the outcome
