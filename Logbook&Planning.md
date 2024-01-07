@@ -100,7 +100,7 @@ Everyone: PP presentation, report, other to be discussed.
 
 25/12/23
 - Lucas (4 h)
-1. Wokred on post processing the data to ensure data made sense
+1. Worked on post processing the data to ensure data made sense
 2. Animation script can be found in conv lstm notebook. Skeleton should be solid. Only need to add more subplots and change the colors.
    To do: Might need to transform into a class to automate calling it.
 3. Started working on initializing the conv lstm model
@@ -113,6 +113,8 @@ Everyone: PP presentation, report, other to be discussed.
 30/12/23
 - Apostolos (2h)
 1. First attempt on finalizing the first CNN model with 96 outputs instead of 1
+- Antonio (1.5 h)
+1. Worked on ConvLSTM model.
 
 31/12/23
 - Apostolos (3h)
