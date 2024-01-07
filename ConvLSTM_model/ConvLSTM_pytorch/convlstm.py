@@ -133,9 +133,9 @@ class ConvLSTM(nn.Module):
         """
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
-            input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
+            input_tensor = input_tensor.permute(1, 0, 3, 4) # 2, as 3rd size  
 
-        b, _, _, h, w = input_tensor.size()
+        b, _, h, w = input_tensor.size() #_, 3rd size
 
         # Implement stateful ConvLSTM
         if hidden_state is not None:
@@ -156,7 +156,7 @@ class ConvLSTM(nn.Module):
             h, c = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
-                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :],
+                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :], # :, 3rd size
                                                  cur_state=[h, c])
                 output_inner.append(h)
 

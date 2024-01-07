@@ -51,8 +51,8 @@ def encode_into_csv(inputs, targets, train_val_test):
 
 def decode_from_csv(train_val_test):
     """
-    Due to the long run time of computing all inputs and targets, a csv file will be opened
-    at the start of every notebook which represents the inputs and targets for a certain dataset
+    Due to the long run time of computing all inputs and targets, a .csv file will be opened
+    at the start of every notebook which represents the inputs and targets for a certain dataset.
 
     Input:
     train_val_test: str, identifies which dataset is being retrieved
@@ -67,8 +67,8 @@ def decode_from_csv(train_val_test):
     
     df_inputs = pd.read_csv(dir_path + train_val_test + '_in.csv')
     
-    # if train_val_test = 'train_val' targets file is too big to be loaded in GitHub
-    # and it needs to be split into 4 different .csv files
+    # if train_val_test = 'train_val', targets file is too big to be loaded in GitHub
+    # and it needs to be split into 4 different .csv files and then concatenated together
     if train_val_test in ('train_val', 'test2', 'test3'):
         df_targets1 = pd.read_csv(dir_path + train_val_test + '_tar1.csv')
         df_targets2 = pd.read_csv(dir_path + train_val_test + '_tar2.csv')
@@ -86,7 +86,7 @@ def decode_from_csv(train_val_test):
 
     # Automatic way to know how many samples are in a given dataset folder
     count = 0
-    dir_path = retrieve_path(train_val_test) + 'DEM/' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+    dir_path = retrieve_path(train_val_test) + 'DEM/' # Arbitrary choice as DEM, VX, VY and WD all have the same number of samples
     for path in os.listdir(dir_path):
         if count == 0:
             file_number = re.search(r'\d{1,5}', path)
