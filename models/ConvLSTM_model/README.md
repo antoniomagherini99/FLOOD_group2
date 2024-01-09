@@ -1,0 +1,2 @@
+This folder contains the notebooks, .py files and other documents related to the ConvLSTM model used in the FLOOD project.
+Model will be based on model found on git: https://github.com/ndrplz/ConvLSTM_pytorch/tree/master 

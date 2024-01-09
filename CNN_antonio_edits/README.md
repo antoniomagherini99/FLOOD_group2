@@ -1,1 +1,0 @@
-This folder contains the notebooks, .py files and other documents related to the CNN model used in the FLOOD project. 

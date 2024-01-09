@@ -5,7 +5,7 @@
 **Group members**:
 Group FLOOD2
 - Antonio Magherini - 5838215
-- David Najda - 
+- David Najda - 4651081
 - Apostolos Politis - 5761387
 - Carlo Sobral de Vito - 
 - Lucas Terlinden-Ruhl - 5863937
@@ -58,7 +58,7 @@ Everyone: PP presentation, report, other to be discussed.
 - Apostolos (0.5h). 
 1. Discussion with project's tutor about additional instructions, explanations and possible progress steps.
 
-- Apostolos (4h). 
+- Apostolos (4 h). 
 1. Initial edit of given data for easier implementation on workshop's given CNN python code.
 
 20/12/2023 – Everyone present (1.5 h). 
@@ -72,17 +72,19 @@ Everyone: PP presentation, report, other to be discussed.
 21/12/2023 
 - Antonio (1 h). 
 1. GitHub repository improvement (folders and files creation). Added datasets and other files from Google Drive.
-- Apostolos (1h). 
+- Apostolos (1 h). 
 1. Further edit on given data for easier implementation on workshop's given CNN python code.
 - Apostolos and David. 
 1. Presentation of progress to the project's tutor and discussion about further explanation on workshop's given CNN python code.
-- Apostolos, David and Carlo (6h). 
+- Apostolos, David and Carlo (6 h). 
 1. Finalization of given dataset edit. 
 2. Implementation on workshop's given CNN python code. 
 3. First draft CNN model (single step prediction).
+- David (1 h).
+1. Set up a draft version for the final report + cover page design
 
 22/12/2023 
-- Antonio and Lucas (6h). 
+- Antonio and Lucas (6 h). 
 1. Read literature to find a conv LSTM model that used pytorch on github. 
 2. Looked through the git folders to see what had been accomplished by other members. 
 3. Started implementing CNN model into git, not completed, work can be seen on a seperate branch. 
@@ -94,5 +96,42 @@ Everyone: PP presentation, report, other to be discussed.
 1. Input data preprocessing (for training/validation dataset)
 
 24/12/2023
-- Lucas and Antonio (2.5 h).
+- Lucas and Antonio (3.5 h).
 1. Automatization of input data processing for all other datasets
+2. Includes git debugging to merge branches
+
+25/12/23
+- Lucas (4 h)
+1. Worked on post processing the data to ensure data made sense
+2. Animation script can be found in conv lstm notebook. Skeleton should be solid. Only need to add more subplots and change the colors.
+   To do: Might need to transform into a class to automate calling it.
+3. Started working on initializing the conv lstm model
+
+26/12/23
+- Lucas (2 h)
+1. Worked on train_epoch function for conv lstm model. Not yet functional, but model understands first inputs.
+   Having difficulty using the previous outputs as new inputs
+
+30/12/23
+- Apostolos (2 h)
+1. First attempt on finalizing the first CNN model with 96 outputs instead of 1
+- Antonio (1.5 h)
+1. Worked on ConvLSTM model.
+
+31/12/23
+- Apostolos (3 h)
+1. First CNN model with 96 outputs working correctly.
+
+1/1/24
+- Apostolos (3 h)
+1. Running the first working CNN model multiple times for 48 outputs, figuring out which settings improve the quality of the outcome
+
+8/1/24
+- David (1 h)
+1. Wrote introduction + notes on dataset sections for the report
+
+9/1/24 - Everyone present (1 h)
+1. Progress update
+2. Discussed mid-term presentation + task division
+- David (0.75 h)
+1. Draft design of PowerPoint to be used during mid-term presentation
