@@ -3,7 +3,7 @@ import torch
 import os
 import re
 
-from load_datasets import retrieve_path, count_pixels
+from pre_processing.load_datasets import retrieve_path, count_pixels
 
 def encode_into_csv(inputs, targets, train_val_test):
     """
