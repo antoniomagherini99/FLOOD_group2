@@ -133,8 +133,9 @@ Everyone: PP presentation, report, other to be discussed.
 9/1/24 - Everyone present (1 h)
 1. Progress update
 2. Discussed mid-term presentation + task division
-- David (0.75 h)
+- David (2.75 h)
 1. Draft design of PowerPoint to be used during mid-term presentation
+2. Restructuring of CNN notebook + moving functions to separate .py files. 
 - Lucas and Antonio (2.5 h)
 1. Updated py files for pre processing so that they return datasets
 2. Created a py file for the animations in post processing
