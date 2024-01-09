@@ -129,3 +129,9 @@ Everyone: PP presentation, report, other to be discussed.
 8/1/24
 - David (1 h)
 1. Wrote introduction + notes on dataset sections for the report
+
+9/1/24 - Everyone present (1 h)
+1. Progress update
+2. Discussed mid-term presentation + task division
+- David (0.75 h)
+1. Draft design of PowerPoint to be used during mid-term presentation
