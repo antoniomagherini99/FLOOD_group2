@@ -135,3 +135,7 @@ Everyone: PP presentation, report, other to be discussed.
 2. Discussed mid-term presentation + task division
 - David (0.75 h)
 1. Draft design of PowerPoint to be used during mid-term presentation
+- Lucas and Antonio (2.5 h)
+1. Updated py files for pre processing so that they return datasets
+2. Created a py file for the animations in post processing
+3. Tried to debug the conv_lstm model with no success
