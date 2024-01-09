@@ -1,84 +1,122 @@
 import torch
-import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
 
-def process_elevation_data(file_id, dataset_id):
-    """
-    Processes elevation data from a DEM file.
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    Args:
-    file_id (str): Identifier of the DEM file to be processed.
-    dataset_id (str): Identifier of which dataset is to be used (train/val, dataset1, dataset2 or dataset3).
+# Define the CNN architecture
 
-    Returns:
-    torch.Tensor: A tensor combining the original elevation data and its slope in x and y directions.
-    """
-    try:
-    # retrieve file_path
-        if dataset_id=='train/val':
-            file_path = f'data/dataset_train_val/DEM/DEM_{file_id}.txt'
-        elif dataset_id=='dataset1':
-            file_path = f'data/dataset1/DEM/DEM_{file_id}.txt'
-        elif dataset_id=='dataset2':
-            file_path = f'data/dataset2/DEM/DEM_{file_id}.txt'
-        elif dataset_id=='dataset3':
-            file_path = f'data/dataset3/DEM/DEM_{file_id}.txt'
+class DoubleConv(nn.Module):
+    """(convolution => [BN] => ReLU) * 2"""
+
+    def __init__(self, in_channels=1, out_channels=1, mid_channels=None):
+        super().__init__()
+        if not mid_channels:
+            mid_channels = out_channels
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        return self.double_conv(x)
+
+
+class Down(nn.Module):
+    """Downscaling with maxpool then double conv"""
+
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool2d(2),
+            DoubleConv(in_channels, out_channels)
+        )
+
+    def forward(self, x):
+        return self.maxpool_conv(x)
+
+
+class Up(nn.Module):
+    """Upscaling then double conv"""
+
+    def __init__(self, in_channels, out_channels, bilinear=True):
+        super().__init__()
+
+        # if bilinear, use the normal convolutions to reduce the number of channels
+        if bilinear:
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+            self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
         else:
-            print('invalid dataset identifier entered. Please select one of the following:')
-            print('train/val, dataset1, dataset2 or dataset3')
+            self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
+            self.conv = DoubleConv(in_channels, out_channels)
 
-        elevation_data = np.loadtxt(file_path)
-        elevation_grid = elevation_data[:, 2].reshape(64, 64)
-        elevation_tensor = torch.tensor(elevation_grid, dtype=torch.float32)
-        slope_x, slope_y = torch.gradient(elevation_tensor)
-        elevation_slope_tensor = torch.stack((elevation_tensor, slope_x, slope_y), dim=0)
+    def forward(self, x1, x2):
+        x1 = self.up(x1)
+        # input is CHW
+        diffY = x2.size()[2] - x1.size()[2]
+        diffX = x2.size()[3] - x1.size()[3]
 
-        return elevation_slope_tensor
+        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
+                        diffY // 2, diffY - diffY // 2])
+        # if you have padding issues, see
+        # https://github.com/HaiyongJiang/U-Net-Pytorch-Unstructured-Buggy/commit/0e854509c2cea854e247a9c615f175f76fbb2e3a
+        # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
+        x = torch.cat([x2, x1], dim=1)
+        return self.conv(x)
 
-    except Exception as e:
-        print(f"Error processing elevation data: {e}")
-        return None
 
-    
-    
-def process_water_depth(file_id, dataset_id, time_step=0):
-    """
-    Processes water depth data from a specific time step in a file.
+class OutConv(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(OutConv, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
 
-    Args:
-    file_id (str): Identifier of the water depth file to be processed.
-    dataset_id (str): Identifier of which dataset is to be used (train/val, dataset1, dataset2 or dataset3).
-    time_step (int): Time step to extract from the file. Default is the first time step.
+    def forward(self, x):
+        return self.conv(x)
 
-    Returns:
-    torch.Tensor or None: A 64x64 tensor representing water depth at the given time step, or None if the data is invalid.
-    """  
-    # retrieve file_path
-    if dataset_id=='train/val':
-        file_path = f'data/dataset_train_val/WD/WD_{file_id}.txt'
-    elif dataset_id=='dataset1':
-        file_path = f'data/dataset1/WD/WD_{file_id}.txt'
-    elif dataset_id=='dataset2':
-        file_path = f'data/dataset2/WD/WD_{file_id}.txt'
-    elif dataset_id=='dataset3':
-        file_path = f'data/dataset3/WD/WD_{file_id}.txt'
-    else:
-        print('invalid dataset identifier entered. Please select one of the following:')
-        print('train/val, dataset1, dataset2 or dataset3')
+class UNet(nn.Module):
+    def __init__(self, n_channels=4, n_classes=48, bilinear=False):
+        super(UNet, self).__init__()
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.bilinear = bilinear
 
-    # Read the file
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
+        self.inc = (DoubleConv(n_channels, 128))
+        self.down1 = (Down(128, 256))
+        self.down2 = (Down(256, 512))
+        self.down3 = (Down(512, 1024))
+        factor = 2 if bilinear else 1
+        self.down4 = (Down(1024, 2048 // factor))
+        self.up1 = (Up(2048, 1024 // factor, bilinear))
+        self.up2 = (Up(1024, 512 // factor, bilinear))
+        self.up3 = (Up(512, 256 // factor, bilinear))
+        self.up4 = (Up(256, 128, bilinear))
+        self.outc = (OutConv(128, n_classes))
 
-    try:
-        # Extract the specified row and convert string elements to floats
-        selected_row = lines[time_step].split()
-        depth_values = [float(val) for val in selected_row]
+    def forward(self, x):
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+        x = self.up1(x5, x4)
+        x = self.up2(x, x3)
+        x = self.up3(x, x2)
+        x = self.up4(x, x1)
+        logits = self.outc(x)
+        return logits
 
-        # Validate and reshape the data into a 64x64 tensor
-        if len(depth_values) == 64 * 64:
-            depth_tensor = torch.tensor(depth_values).view(64, 64)
-            return depth_tensor
-        else:
-            raise ValueError(f"The number of elements in {file_path} at time step {time_step} doesn't match a 64x64 matrix.")
-    except IndexError:
-        raise IndexError(f"Time step {time_step} is out of range for the file {file_path}.")
+    def use_checkpointing(self):
+        self.inc = torch.utils.checkpoint(self.inc)
+        self.down1 = torch.utils.checkpoint(self.down1)
+        self.down2 = torch.utils.checkpoint(self.down2)
+        self.down3 = torch.utils.checkpoint(self.down3)
+        self.down4 = torch.utils.checkpoint(self.down4)
+        self.up1 = torch.utils.checkpoint(self.up1)
+        self.up2 = torch.utils.checkpoint(self.up2)
+        self.up3 = torch.utils.checkpoint(self.up3)
+        self.up4 = torch.utils.checkpoint(self.up4)
+        self.outc = torch.utils.checkpoint(self.outc)
