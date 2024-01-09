@@ -1,6 +1,5 @@
 # file for storing functions used for loading datasets
 # 1st version - Antonio
-
 import torch 
 import os
 import re
@@ -27,10 +26,10 @@ def retrieve_path(train_val_test):
 
     """
     path_dictionary = {
-        'train_val': '../dataset_train_val/',
-        'test1': '../dataset1/',
-        'test2': '../dataset2/',
-        'test3': '../dataset3/'
+        'train_val': 'data/dataset_train_val/',
+        'test1': 'data/dataset1/',
+        'test2': 'data/dataset2/',
+        'test3': 'data/dataset3/'
         }
     path = path_dictionary[train_val_test]
     return path

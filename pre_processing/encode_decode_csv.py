@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 import os
 import re
+from torch.utils.data import TensorDataset
 
 from pre_processing.load_datasets import retrieve_path, count_pixels
 
@@ -58,9 +59,10 @@ def decode_from_csv(train_val_test):
     train_val_test: str, identifies which dataset is being retrieved
 
     Output:
-    inputs: torch.Tensor which contains DEM, slope x and y for all files in a dataset
+    dataset: contains two torch.Tensors.
+        inputs: which contains DEM, slope x and y for all files in a dataset
             Shape is samples x 3 x pixel_square
-    targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
+        targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
             Shape is samples x 2 x time_steps x pixel_square x pixel_square
     """
     dir_path = retrieve_path(train_val_test)
@@ -105,9 +107,17 @@ def decode_from_csv(train_val_test):
     inputs = torch.reshape(restored_inputs, shape_inputs)
     targets = torch.reshape(restored_targets, shape_targets)
     
-    targets = targets.permute(0, 2, 1, 3, 4) # to have a similar shape as inputs
-
+    inputs = inputs.unsqueeze(1) # demonstrate that inputs has 1 time step
+    
+    boundary = targets[:, 0, 0].unsqueeze(1).unsqueeze(1) # only interested in water depth, discharge is zeros
+    targets = targets[:, 1:] # remove boundaries from targets
+    
+    inputs = torch.cat((inputs, boundary), dim = 2)
+    
+    dataset = TensorDataset(inputs, targets)
+    
+    
     # Print the shapes of the restored tensors
     print("Restored inputs Shape:", inputs.shape)
     print("Restored targets Shape:", targets.shape)
-    return inputs, targets
+    return dataset
