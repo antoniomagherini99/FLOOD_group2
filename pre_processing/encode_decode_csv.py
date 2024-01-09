@@ -52,18 +52,20 @@ def encode_into_csv(inputs, targets, train_val_test):
 
 def decode_from_csv(train_val_test):
     """
-    Due to the long run time of computing all inputs and targets, a .csv file will be opened
-    at the start of every notebook which represents the inputs and targets for a certain dataset.
+    Due to the long run time of computing all inputs and targets, a
+    .csv file will be opened at the start of every notebook which
+    represents the inputs and targets for a certain dataset.
 
     Input:
     train_val_test: str, identifies which dataset is being retrieved
 
     Output:
-    dataset: contains two torch.Tensors.
-        inputs: which contains DEM, slope x and y for all files in a dataset
-            Shape is samples x 3 x pixel_square
-        targets: torch.Tensor which contains water depth and discharge for all files in a dataset.
-            Shape is samples x 2 x time_steps x pixel_square x pixel_square
+    dataset: contains two torch.Tensors with length equal to number of samples
+        inputs: contains DEM, slope x and y and the boundary condition
+            for water depth for all files in a dataset.
+            Shape is 4 x pixel_square x pixel_square
+        targets: contains water depth and discharge for all files in a dataset.
+            Shape is time_steps (96) x 2 x pixel_square x pixel_square
     """
     dir_path = retrieve_path(train_val_test)
     
