@@ -116,7 +116,7 @@ def decode_from_csv(train_val_test):
     
     inputs = torch.cat((inputs, boundary), dim = 2)
     
-    dataset = TensorDataset(inputs, targets)
+    dataset = TensorDataset(inputs.float(), targets.float())
     
     
     # Print the shapes of the restored tensors
