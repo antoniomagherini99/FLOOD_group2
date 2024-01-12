@@ -57,7 +57,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x, scal
     div1 = make_axes_locatable(ax1)
     cax1 = div1.append_axes('right', '5%', '5%')
 
-    static_tensor = scaler_x.inverse_transform(inputs.reshape(4, -1).T.cpu()[:, 0].reshape(64, 64)  # index 0 refers to elevation
+    static_tensor = inputs[0]  # index 0 refers to elevation
     im1 = ax1.imshow(static_tensor, cmap = 'terrain', origin='lower')
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
