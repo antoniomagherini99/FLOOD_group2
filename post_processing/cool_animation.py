@@ -3,7 +3,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import animation
 import torch
 
-def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x, scaler_y, device = 'cuda', save = False):
+def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda', save = False):
     '''
 
     Parameters
