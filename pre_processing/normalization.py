@@ -70,7 +70,7 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
     pixels = 64 #count_pixels(sample, train_val) - hard-coded, will change it later?
 
     # denormalize inputs and targets 
-    elevation = scaler_x.inverse_transform(x[0].reshape(4, -1).T.cpu())[:,0].reshape(pixels, pixels)
+    elevation = scaler_x.inverse_transform(x.reshape(4, -1).T.cpu())[:, 0].reshape(pixels, pixels)
 
     water_depth = scaler_wd.inverse_transform(wd.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
     discharge = scaler_q.inverse_transform(q.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
