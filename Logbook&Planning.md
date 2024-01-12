@@ -158,3 +158,8 @@ Everyone: PP presentation, report, other to be discussed.
    Should start to divide that function into multiple ones, making it easier to use
 - Lucas and Antionio (2h)
 1. Preperation of slides
+
+12/1/24
+- Lucas (1h)
+1. Split conv_lstm notebooks into two, one of them is now only for training
+   The other is only for testing
