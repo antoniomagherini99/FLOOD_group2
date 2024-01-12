@@ -161,7 +161,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
         min_val4 = arr4.min()
         im6.set_data(arr4)
         im6.set_clim(min_val4, max_val4)
-        tx6.set_text(f'Precition: {feature_dic[feature2]}')
+        tx6.set_text(f'Prediction: {feature_dic[feature2]}')
 
         # Subplot 8
         arr5 = animated_tensor5[i]
