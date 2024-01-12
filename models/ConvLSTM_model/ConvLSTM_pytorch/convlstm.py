@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import copy
 
 class ConvLSTMCell(nn.Module):
 
@@ -85,11 +86,12 @@ class ConvLSTM(nn.Module):
         >> h = last_states[0][0]  # 0 for layer index, 0 for h index
     """
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers,
+    def __init__(self, input_dim, output_dim, hidden_dim, kernel_size, num_layers,
                  batch_first=False, bias=True, return_all_layers=False):
         super(ConvLSTM, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
+        self.hidden_number = copy.deepcopy(hidden_dim) # created to avoid confusion with hidden_dim in following line
 
         # Make sure that both `kernel_size` and `hidden_dim` are lists having len == num_layers
         kernel_size = self._extend_for_multilayer(kernel_size, num_layers)
@@ -98,12 +100,17 @@ class ConvLSTM(nn.Module):
             raise ValueError('Inconsistent list length.')
 
         self.input_dim = input_dim
+        self.output_dim = output_dim
         self.hidden_dim = hidden_dim
         self.kernel_size = kernel_size
         self.num_layers = num_layers
         self.batch_first = batch_first
         self.bias = bias
         self.return_all_layers = return_all_layers
+
+        self.conv2 = nn.Conv2d(in_channels = self.hidden_number, 
+                               out_channels = self.output_dim, kernel_size = 1,
+                               padding = 0, bias = False)
 
         cell_list = []
         for i in range(0, self.num_layers):
@@ -132,9 +139,9 @@ class ConvLSTM(nn.Module):
         """
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
-            input_tensor = input_tensor.permute(1, 0, 3, 4) # 2, as 3rd size  
+            input_tensor = input_tensor.permute(1, 0, 2, 3, 4) 
 
-        b, _, _, h, w = input_tensor.size() #_, 3rd size
+        b, _, _, h, w = input_tensor.size()
 
         # Implement stateful ConvLSTM
         if hidden_state is not None:
@@ -155,14 +162,15 @@ class ConvLSTM(nn.Module):
             h, c = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
-                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :], # :, 3rd size
+                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :], 
                                                  cur_state=[h, c])
                 output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
             cur_layer_input = layer_output
+            final_layer_output = self.conv2(layer_output[:,0]).unsqueeze(1)
 
-            layer_output_list.append(layer_output)
+            layer_output_list.append(final_layer_output)
             last_state_list.append([h, c])
 
         if not self.return_all_layers:

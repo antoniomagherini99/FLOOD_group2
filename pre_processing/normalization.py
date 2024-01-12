@@ -43,7 +43,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q):
         norm_x = (x - min_x) / (max_x - min_x)
         norm_wd = (wd - min_wd) / (max_wd - min_wd)
         norm_q = (q - min_q) / (max_q - min_q)
-        norm_y = torch.cat((norm_wd, norm_q), dim = 1)
+        norm_y = torch.cat((norm_wd.unsqueeze(1), norm_q.unsqueeze(1)), dim = 1)
         normalized_dataset.append((norm_x, norm_y))
     
     return normalized_dataset
