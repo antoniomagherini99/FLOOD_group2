@@ -3,7 +3,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import animation
 import torch
 
-def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda', save = False):
+from pre_processing.normalization import denormalize_dataset
+
+def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x, scaler_wd, scaler_q, device = 'cuda', save = False):
     '''
 
     Parameters
@@ -11,7 +13,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     sample : int
         Choose a sample to animate.
     dataset : torch.utils.data.Dataset
-        dataset of train_val or test, in future, two datasets should be parameters.
+        normalized dataset of train_val or test, in future, two datasets should be parameters.
     model : class of model
         model to predict on the sample
     title_anim : str
@@ -30,12 +32,16 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     '''
     # bottom right graph could be the losses at each hour for both outputs
     
-    inputs = dataset[sample][0][0]
-    targets = dataset[sample][1]
+    input = dataset[sample][0]
+    output = dataset[sample][1]
+    boundary_condition = input[0, 3]
+
+    elevation, water_depth, discharge = denormalize_dataset(input, output, title_anim, scaler_x, scaler_wd, scaler_q, sample)
     
     if model_who == 'conv_lstm':
         sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device)) # create a batch of 1?
         preds = torch.cat(sample_list, dim=1).detach().cpu()[0] # remove batch
+        _, wd_pred, q_pred = denormalize_dataset(input, preds, title_anim, scaler_x, scaler_wd, scaler_q, sample)
     
     feature1 = 0
     feature2 = 1
@@ -57,14 +63,14 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     div1 = make_axes_locatable(ax1)
     cax1 = div1.append_axes('right', '5%', '5%')
 
-    static_tensor = inputs[0]  # index 0 refers to elevation
+    static_tensor = elevation  
     im1 = ax1.imshow(static_tensor, cmap = 'terrain', origin='lower')
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
     ax1.set_title('Elevation')
 
     # Subplot 4
-    static_tensor2 = inputs[3]  # index 3 refers to boundary
+    static_tensor2 = boundary_condition
     ax4.imshow(static_tensor2, cmap = 'binary', origin='lower')
     ax4.set_title('Breach Location')
 
@@ -72,7 +78,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     div2 = make_axes_locatable(ax2)
     cax2 = div2.append_axes('right', '5%', '5%')
 
-    animated_tensor1 = targets[:, feature1]
+    animated_tensor1 = water_depth
     im2 = ax2.imshow(animated_tensor1[0], cmap = 'Blues', origin='lower')
     cb2 = fig.colorbar(im2, cax=cax2)
     cb2.set_label(f'{feature_dic_units[feature1]}')
@@ -82,7 +88,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     div3 = make_axes_locatable(ax3)
     cax3 = div3.append_axes('right', '5%', '5%')
 
-    animated_tensor2 = targets[:, feature2]
+    animated_tensor2 = discharge
     im3 = ax3.imshow(animated_tensor2[0], cmap = 'Greens', origin='lower')
     cb3 = fig.colorbar(im3, cax=cax3)
     cb3.set_label(f'{feature_dic_units[feature2]}')
@@ -92,7 +98,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     div5 = make_axes_locatable(ax5)
     cax5 = div5.append_axes('right', '5%', '5%')
 
-    animated_tensor3 = preds[:, feature1]
+    animated_tensor3 = wd_pred
     im5 = ax5.imshow(animated_tensor3[0], cmap = 'Blues', origin='lower')
     cb5 = fig.colorbar(im5, cax=cax5)
     cb5.set_label(f'{feature_dic_units[feature1]}')
@@ -102,7 +108,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
     div6 = make_axes_locatable(ax6)
     cax6 = div6.append_axes('right', '5%', '5%')
 
-    animated_tensor4 = preds[:, feature2]
+    animated_tensor4 = q_pred
     im6 = ax6.imshow(animated_tensor4[0], cmap = 'Greens', origin='lower')
     cb6 = fig.colorbar(im6, cax=cax6)
     cb6.set_label(f'{feature_dic_units[feature2]}')
@@ -179,7 +185,7 @@ def plot_animation(sample, dataset, model, title_anim, model_who, device = 'cuda
         im9.set_clim(min_val6, max_val6)
         tx9.set_text(f'Diff: {feature_dic[feature2]}')
 
-    ani = animation.FuncAnimation(fig, animate, frames=targets.shape[0])
+    ani = animation.FuncAnimation(fig, animate, frames=water_depth.shape[0])
 
     plt.show()
     if save == True:

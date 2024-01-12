@@ -1,7 +1,10 @@
 # .py file containing the functions used for normalizing datasets in ConvLSTM model for DSAIE FLOOD project.
 
-from sklearn.preprocessing import MinMaxScaler
 import torch
+
+from sklearn.preprocessing import MinMaxScaler
+
+from pre_processing.load_datasets import count_pixels 
 
 def scaler(train_dataset, scaler_x=MinMaxScaler(), scaler_wd=MinMaxScaler(), scaler_q=MinMaxScaler()):
     '''
@@ -27,8 +30,8 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q):
     Function for normalizing every dataset. 
 
     Inputs: dataset = dataset to be normalized
-            scaler_x, scaler_y = scalers for inputs and targets, created 
-                                 with the scaler function
+            scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
+                                            with the scaler function
 
     Outputs: normalized_dataset = dataset after normalization 
     '''
@@ -45,5 +48,31 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q):
         norm_q = (q - min_q) / (max_q - min_q)
         norm_y = torch.cat((norm_wd.unsqueeze(1), norm_q.unsqueeze(1)), dim = 1)
         normalized_dataset.append((norm_x, norm_y))
-    
+    print(norm_x.shape)
+    print(norm_y.shape)
     return normalized_dataset
+
+def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q, sample):
+    '''
+    Function for denormalizing every dataset. 
+
+    Inputs: dataset = dataset to be normalized
+            train_val_test : str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
+            scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
+                                            with the scaler function
+
+    Outputs: normalized_dataset = dataset after normalization 
+    '''
+    x = inputs #inputs 
+    wd = outputs[:, 0] #.permute(1, 0, 2, 3)
+    q = outputs[:, 1] #.permute(1, 0, 2, 3)
+
+    pixels = 64 #count_pixels(sample, train_val) - hard-coded, will change it later?
+
+    # denormalize inputs and targets 
+    elevation = scaler_x.inverse_transform(x[0].reshape(4, -1).T.cpu())[:,0].reshape(pixels, pixels)
+
+    water_depth = scaler_wd.inverse_transform(wd.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
+    discharge = scaler_q.inverse_transform(q.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
+
+    return elevation, water_depth, discharge
