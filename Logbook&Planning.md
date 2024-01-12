@@ -150,3 +150,11 @@ Everyone: PP presentation, report, other to be discussed.
 1. Updated cool_animation to include predictions
 2. Tried to get better predictions, model performs better with more epochs
    Model also performs better for water depth
+
+11/1/24
+- Lucas (4h)
+1. Played around with conv lstm model and ran the model for more epochs
+2. Attempted to denormalize inputs within cool animation
+   Should start to divide that function into multiple ones, making it easier to use
+- Lucas and Antionio (2h)
+1. Preperation of slides
