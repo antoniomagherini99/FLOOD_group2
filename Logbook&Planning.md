@@ -140,3 +140,26 @@ Everyone: PP presentation, report, other to be discussed.
 1. Updated py files for pre processing so that they return datasets
 2. Created a py file for the animations in post processing
 3. Tried to debug the conv_lstm model with no success
+
+10/1/24
+- Lucas and Antonio (2h)
+1. Able to get predictions from conv lstm
+2. Realized that loss is extremelly small for bad predictions
+- Lucas (2.5h)
+0. Met with Roberto to discuss the project
+1. Updated cool_animation to include predictions
+2. Tried to get better predictions, model performs better with more epochs
+   Model also performs better for water depth
+
+11/1/24
+- Lucas (4h)
+1. Played around with conv lstm model and ran the model for more epochs
+2. Attempted to denormalize inputs within cool animation
+   Should start to divide that function into multiple ones, making it easier to use
+- Lucas and Antionio (2h)
+1. Preperation of slides
+
+12/1/24
+- Lucas (1h)
+1. Split conv_lstm notebooks into two, one of them is now only for training
+   The other is only for testing

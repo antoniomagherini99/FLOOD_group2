@@ -112,7 +112,7 @@ def decode_from_csv(train_val_test):
     inputs = inputs.unsqueeze(1) # demonstrate that inputs has 1 time step
     
     boundary = targets[:, 0, 0].unsqueeze(1).unsqueeze(1) # only interested in water depth, discharge is zeros
-    targets = targets[:, 1:] # remove boundaries from targets
+    targets = targets[:, 2::2] # remove boundaries from targets and half time steps
     
     inputs = torch.cat((inputs, boundary), dim = 2)
     
