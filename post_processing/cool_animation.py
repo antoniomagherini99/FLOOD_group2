@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import animation
 import torch
+import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
@@ -16,19 +17,18 @@ def definitions(index):
         0: r'$m$',
         1: r'$m^3 s^{-1} m^{-1}$'
     }
-    var = feature_dic[index]
+    name = feature_dic[index]
     unit = feature_dic_units[index]
-    return var, unit
+    return name, unit
 
 def find_axes(axis):
     div = make_axes_locatable(axis)
     cax = div.append_axes('right', '5%', '5%')
     return cax
 
-def animated_plot(figure, animated_tensor, axis, variable, diff = False, prediction = False):
-    
-    # set color maps, units and titles
-    
+def animated_plot(figure, animated_tensor, axis,
+                  variable, diff = False, prediction = False):
+    # Set color maps, units and titles
     if variable == 'water_depth':
         cmap = 'Blues'
         title, label = definitions(0)
@@ -36,17 +36,23 @@ def animated_plot(figure, animated_tensor, axis, variable, diff = False, predict
         cmap = 'Greens'
         title, label = definitions(1)
     else:
-        raise('Check variable input')  
+        raise Exception ('Check variable input. "water_depth" and ' +
+                         '"discharge" only valid inputs')  
     
     if diff == False:
         if prediction == False:
             title = 'Targets: ' + title
         elif prediction == True:
             title = 'Predictions: ' + title
+        else:
+            raise TypeError ('"Prediction" needs to be a boolean')
     elif diff == True:
         cmap = 'seismic' 
         title = 'Differences: ' + title
+    else:
+        raise TypeError ('"diff" needs to be a boolean')
         
+    # Start plotting
     cax = find_axes(axis)
     image = axis.imshow(animated_tensor[0], cmap=cmap, origin='lower')
     cb = figure.colorbar(image, cax=cax)
@@ -55,10 +61,15 @@ def animated_plot(figure, animated_tensor, axis, variable, diff = False, predict
     # set color bar limits
     min_val = animated_tensor.min()
     max_val = animated_tensor.max()
-    if diff == True: # Only the differences will have a minimum that is negative (!check for CNN)
+    if diff == True:
         absolute_max = np.max(np.array([abs(min_val), max_val]))
         min_val = -1 * absolute_max
         max_val = absolute_max
+    elif diff == False:
+        None
+    else:
+        raise TypeError ('"diff" needs to be a boolean')
+        
     image.set_clim(min_val, max_val)
     return image
 
@@ -67,6 +78,8 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
                    scaler_wd, scaler_q, device='cuda', save=False):
     '''
     Plot animation to visualize the evolution of certain variables over time.
+    Assumes that the model can output water depth and discharge.
+    Also assumes the data is normalized.
 
     Parameters
     ----------
@@ -98,22 +111,30 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
 
     # Extracting information from the dataset
     input = dataset[sample][0]
-    output = dataset[sample][1]
+    target = dataset[sample][1]
     boundary_condition = input[0, 3]
 
     # Denormalizing the data for plotting
-    elevation, water_depth, discharge = denormalize_dataset(input, output, title_anim, scaler_x, scaler_wd, scaler_q, sample)
+    elevation, water_depth, discharge = denormalize_dataset(
+        input, target, title_anim, scaler_x, scaler_wd, scaler_q, sample)
+    
     # need to try and find a more generic way to do this
-    model_who = str(model.__class__)[-10:-2]
+    model_who = str(model.__class__.__name__)
     if model_who == 'ConvLSTM':
         sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device))  # create a batch of 1?
         preds = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
-    
+    elif model_who == 'UNet':
+        preds = model(dataset[sample][0]).to(device).detach().cpu()
+    else:
+        raise Exception('Need to check if statements to see if model is implemented')
+        
     _, wd_pred, q_pred = denormalize_dataset(input, preds, title_anim, scaler_x, scaler_wd, scaler_q, sample)
 
 
     # Creating subplots
-    fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(3, 3, figsize=(10, 10))
+    fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(
+        3, 3, figsize=(10, 10))
+    
     fig.subplots_adjust(wspace=0.5)  # Adjust the width space between subplots
 
     # Subplot 1
@@ -124,8 +145,37 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     ax1.set_title('Elevation')
 
     # Subplot 4
-    ax4.imshow(boundary_condition, cmap='binary', origin='lower') # should edit to make more clear
+    non_zero_indices = torch.nonzero(boundary_condition)
+    non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
+    
+    ax4.imshow(boundary_condition, cmap='binary', origin='lower')
+    ax4.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
+                clip_on = False, clip_box = plt.gca().transData)
     ax4.set_title('Breach Location')
+    
+    # Subplot 7
+    features = target.shape[1]
+    time_steps = target.shape[0]
+    
+    losses = np.zeros((features, time_steps)) # initialize empty array
+    time_step_array = np.arange(1, time_steps + 1)
+    
+    # Compute losses uses MSELoss
+    for step in range(time_steps):
+        for feature in range(features):
+            losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
+            
+    wd_label, _ = definitions(0)
+    q_label, _ = definitions(1)
+    
+    # Start Plotting
+    ax7.set_box_aspect(1)
+    ax7.plot(time_step_array, losses[0], label = wd_label)
+    ax7.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
+    ax7.set_title('Losses per Hour')
+    ax7.set_xlabel('Time Steps, hours')
+    ax7.set_ylabel('Normalized Losses [-]')
+    ax7.legend()
 
     # Subplot 2
     im2 = animated_plot(fig, water_depth, ax2, 'water_depth')
@@ -150,28 +200,28 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     title_con = title_anim + f' for sample {sample} using model: ' + model_who
     over_title = fig.suptitle('Hour 1: ' + title_con, fontsize=16) # try and update this to show the hour
 
-    def animate(i):
-        over_title.set_text(f'Hour {i + 1}: ' + title_con)
+    def animate(step):
+        over_title.set_text(f'Hour {step + 1}: ' + title_con)
         # Subplot 2
-        im2.set_data(water_depth[i])
+        im2.set_data(water_depth[step])
 
         # Subplot 3
-        im3.set_data(discharge[i])
+        im3.set_data(discharge[step])
 
         # Subplot 5
-        im5.set_data(wd_pred[i])
+        im5.set_data(wd_pred[step])
 
         # Subplot 6
-        im6.set_data(q_pred[i])
+        im6.set_data(q_pred[step])
 
         # Subplot 8
-        im8.set_data(diff_wd[i])
+        im8.set_data(diff_wd[step])
 
         # Subplot 9
-        im9.set_data(diff_q[i])
+        im9.set_data(diff_q[step])
 
     # Set up the animation
-    ani = animation.FuncAnimation(fig, animate, frames=water_depth.shape[0])
+    ani = animation.FuncAnimation(fig, animate, frames = time_steps)
 
     # Display the animation
     plt.show()
