@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def train_epoch(model, loader, optimizer, device='cpu'):
+def train_epoch(model, loader, optimizer, device):
     model.to(device)
     model.train() # specifies that the model is in training mode
 
@@ -31,7 +31,7 @@ def train_epoch(model, loader, optimizer, device='cpu'):
     return losses
 
 
-def evaluation(model, loader, device='cpu'):
+def evaluation(model, loader, device):
     model.to(device)
     model.eval() # specifies that the model is in evaluation mode
 

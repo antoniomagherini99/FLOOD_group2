@@ -67,7 +67,9 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
     wd = outputs[:, 0] #.permute(1, 0, 2, 3)
     q = outputs[:, 1] #.permute(1, 0, 2, 3)
 
-    pixels = 64 #count_pixels(sample, train_val) - hard-coded, will change it later?
+    pixels = 64 #count_pixels(sample, train_val) - hard-coded, leave as it is for now
+    if train_val == 'test3':
+        pixels = 128
 
     # denormalize inputs and targets 
     elevation = scaler_x.inverse_transform(x.reshape(4, -1).T.cpu())[:, 0].reshape(pixels, pixels)
