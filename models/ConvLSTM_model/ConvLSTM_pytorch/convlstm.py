@@ -168,7 +168,8 @@ class ConvLSTM(nn.Module):
 
             layer_output = torch.stack(output_inner, dim=1)
             cur_layer_input = layer_output
-            final_layer_output = self.conv2(layer_output[:,0]).unsqueeze(1)
+            layer_output_1kernel = self.conv2(layer_output[:,0]).unsqueeze(1) # 1x1 kernel to reduce from hidden dim to number of outputs
+            final_layer_output = layer_output_1kernel # nn.ReLU(layer_output_1kernel) # non linear activation to prevent negative outputs
 
             layer_output_list.append(final_layer_output)
             last_state_list.append([h, c])
