@@ -48,8 +48,6 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q):
         norm_q = (q - min_q) / (max_q - min_q)
         norm_y = torch.cat((norm_wd.unsqueeze(1), norm_q.unsqueeze(1)), dim = 1)
         normalized_dataset.append((norm_x, norm_y))
-    print(norm_x.shape)
-    print(norm_y.shape)
     return normalized_dataset
 
 def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q, sample):

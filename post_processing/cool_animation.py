@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import animation
 import torch
+import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
 
@@ -10,15 +11,19 @@ def find_axes(axis):
     cax = div.append_axes('right', '5%', '5%')
     return cax
 
-def set_colorbar_limits(animated_tensor, image):
+def set_colorbar_limits(animated_tensor, image, diff = False):
     min_val = animated_tensor.min()
     max_val = animated_tensor.max()
+    if diff == True:
+        absolute_max = np.max(np.array([abs(min_val), max_val]))
+        min_val = -1 * absolute_max
+        max_val = absolute_max
     image.set_clim(min_val, max_val)
     return None
 
 
 
-def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
+def plot_animation(sample, dataset, model, title_anim, scaler_x,
                    scaler_wd, scaler_q, device='cuda', save=False):
     '''
     Plot animation to visualize the evolution of certain variables over time.
@@ -33,9 +38,6 @@ def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
         Model to predict on the sample.
     title_anim : str
         Title of the animation.
-    model_who : str
-        Identifies which model is used to get a prediction.
-        Currently only contains "conv_lstm"; change if other models are used.
     scaler_x : instance of normalizer
         Used on inputs.
     scaler_wd : instance of normalizer
@@ -61,8 +63,9 @@ def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(input, output, title_anim, scaler_x, scaler_wd, scaler_q, sample)
-
-    if model_who == 'conv_lstm':
+    # need to try and find a more generic way to do this
+    model_who = str(model.__class__)[-10:-2]
+    if model_who == 'ConvLSTM':
         sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device))  # create a batch of 1?
         preds = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
         _, wd_pred, q_pred = denormalize_dataset(input, preds, title_anim, scaler_x, scaler_wd, scaler_q, sample)
@@ -131,22 +134,23 @@ def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
     cax8 = find_axes(ax8)
 
     diff_wd = wd_pred - water_depth
-    im8 = ax8.imshow(diff_wd[0], cmap='jet', origin='lower')
+    im8 = ax8.imshow(diff_wd[0], cmap='seismic', origin='lower')
     cb8 = fig.colorbar(im8, cax=cax8)
     cb8.set_label(f'{feature_dic_units[feature1]}')
     tx8 = ax8.set_title(f'Diff: {feature_dic[feature1]}')
-    set_colorbar_limits(diff_wd, im8)
+    set_colorbar_limits(diff_wd, im8, True)
 
     # Subplot 9
     cax9 = find_axes(ax9)
     diff_q = q_pred - discharge
-    im9 = ax9.imshow(diff_q[0], cmap='jet', origin='lower')
+    im9 = ax9.imshow(diff_q[0], cmap='seismic', origin='lower')
     cb9 = fig.colorbar(im9, cax=cax9)
     cb9.set_label(f'{feature_dic_units[feature2]}')
     tx9 = ax9.set_title(f'Diff: {feature_dic[feature2]}')
-    set_colorbar_limits(diff_q, im9)
+    set_colorbar_limits(diff_q, im9, True)
 
-    fig.suptitle(title_anim + f' for sample: {sample}', fontsize=16)
+    fig.suptitle(title_anim + f' for sample {sample} using model: ' +
+                 model_who, fontsize=16)
 
     def animate(i):
         # Subplot 2
