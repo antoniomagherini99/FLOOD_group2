@@ -5,6 +5,19 @@ import torch
 
 from pre_processing.normalization import denormalize_dataset
 
+def find_axes(axis):
+    div = make_axes_locatable(axis)
+    cax = div.append_axes('right', '5%', '5%')
+    return cax
+
+def set_colorbar_limits(animated_tensor, image):
+    min_val = animated_tensor.min()
+    max_val = animated_tensor.max()
+    image.set_clim(min_val, max_val)
+    return None
+
+
+
 def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
                    scaler_wd, scaler_q, device='cuda', save=False):
     '''
@@ -72,129 +85,92 @@ def plot_animation(sample, dataset, model, title_anim, model_who, scaler_x,
     fig.subplots_adjust(wspace=0.5)  # Adjust the width space between subplots
 
     # Subplot 1
-    div1 = make_axes_locatable(ax1)
-    cax1 = div1.append_axes('right', '5%', '5%')
-
-    static_tensor = elevation
-    im1 = ax1.imshow(static_tensor, cmap='terrain', origin='lower')
+    cax1 = find_axes(ax1)
+    im1 = ax1.imshow(elevation, cmap='terrain', origin='lower')
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
     ax1.set_title('Elevation')
 
     # Subplot 4
-    static_tensor2 = boundary_condition
-    ax4.imshow(static_tensor2, cmap='binary', origin='lower')
+    ax4.imshow(boundary_condition, cmap='binary', origin='lower') # should edit to make more clear
     ax4.set_title('Breach Location')
 
     # Subplot 2
-    div2 = make_axes_locatable(ax2)
-    cax2 = div2.append_axes('right', '5%', '5%')
-
-    animated_tensor1 = water_depth
-    im2 = ax2.imshow(animated_tensor1[0], cmap='Blues', origin='lower')
+    cax2 = find_axes(ax2)
+    im2 = ax2.imshow(water_depth[0], cmap='Blues', origin='lower')
     cb2 = fig.colorbar(im2, cax=cax2)
     cb2.set_label(f'{feature_dic_units[feature1]}')
     tx2 = ax2.set_title(f'Hour 0: {feature_dic[feature1]}')
-    min_val1 = animated_tensor1.min()
-    max_val1 = animated_tensor1.max()
-    cb2.set_clim(min_val1, max_val1)
+    set_colorbar_limits(water_depth, im2)
 
     # Subplot 3
-    div3 = make_axes_locatable(ax3)
-    cax3 = div3.append_axes('right', '5%', '5%')
-
-    animated_tensor2 = discharge
-    im3 = ax3.imshow(animated_tensor2[0], cmap='Greens', origin='lower')
+    cax3 = find_axes(ax3)
+    im3 = ax3.imshow(discharge[0], cmap='Greens', origin='lower')
     cb3 = fig.colorbar(im3, cax=cax3)
     cb3.set_label(f'{feature_dic_units[feature2]}')
     tx3 = ax3.set_title(f'Hour 0: {feature_dic[feature2]}')
-    min_val2 = animated_tensor2.min()
-    max_val2 = animated_tensor2.max()
-    cb3.set_clim(min_val2, max_val2)
+    set_colorbar_limits(discharge, im3)
 
     # Subplot 5
-    div5 = make_axes_locatable(ax5)
-    cax5 = div5.append_axes('right', '5%', '5%')
-
-    animated_tensor3 = wd_pred
-    im5 = ax5.imshow(animated_tensor3[0], cmap='Blues', origin='lower')
+    cax5 = find_axes(ax5)
+    im5 = ax5.imshow(wd_pred[0], cmap='Blues', origin='lower')
     cb5 = fig.colorbar(im5, cax=cax5)
     cb5.set_label(f'{feature_dic_units[feature1]}')
     tx5 = ax5.set_title(f'Prediction: {feature_dic[feature1]}')
-    min_val3 = animated_tensor3.min()
-    max_val3 = animated_tensor3.max()
-    cb5.set_clim(min_val3, max_val3)
+    set_colorbar_limits(wd_pred, im5)
 
     # Subplot 6
-    div6 = make_axes_locatable(ax6)
-    cax6 = div6.append_axes('right', '5%', '5%')
-
-    animated_tensor4 = q_pred
-    im6 = ax6.imshow(animated_tensor4[0], cmap='Greens', origin='lower')
+    cax6 = find_axes(ax6)
+    im6 = ax6.imshow(q_pred[0], cmap='Greens', origin='lower')
     cb6 = fig.colorbar(im6, cax=cax6)
     cb6.set_label(f'{feature_dic_units[feature2]}')
     tx6 = ax6.set_title(f'Prediction: {feature_dic[feature2]}')
-    min_val4 = animated_tensor4.min()
-    max_val4 = animated_tensor4.max()
-    cb6.set_clim(min_val4, max_val4)
+    set_colorbar_limits(q_pred, im6)
 
     # Subplot 8
-    div8 = make_axes_locatable(ax8)
-    cax8 = div8.append_axes('right', '5%', '5%')
+    cax8 = find_axes(ax8)
 
-    animated_tensor5 = animated_tensor1 - animated_tensor3
-    im8 = ax8.imshow(animated_tensor5[0], cmap='jet', origin='lower')
+    diff_wd = wd_pred - water_depth
+    im8 = ax8.imshow(diff_wd[0], cmap='jet', origin='lower')
     cb8 = fig.colorbar(im8, cax=cax8)
     cb8.set_label(f'{feature_dic_units[feature1]}')
     tx8 = ax8.set_title(f'Diff: {feature_dic[feature1]}')
-    min_val5 = animated_tensor5.min()
-    max_val5 = animated_tensor5.max()
-    cb8.set_clim(min_val5, max_val5)
+    set_colorbar_limits(diff_wd, im8)
 
     # Subplot 9
-    div9 = make_axes_locatable(ax9)
-    cax9 = div9.append_axes('right', '5%', '5%')
-
-    animated_tensor6 = animated_tensor2 - animated_tensor4
-    im9 = ax9.imshow(animated_tensor6[0], cmap='jet', origin='lower')
+    cax9 = find_axes(ax9)
+    diff_q = q_pred - discharge
+    im9 = ax9.imshow(diff_q[0], cmap='jet', origin='lower')
     cb9 = fig.colorbar(im9, cax=cax9)
     cb9.set_label(f'{feature_dic_units[feature2]}')
     tx9 = ax9.set_title(f'Diff: {feature_dic[feature2]}')
-    min_val6 = animated_tensor6.min()
-    max_val6 = animated_tensor6.max()
-    cb9.set_clim(min_val6, max_val6)
+    set_colorbar_limits(diff_q, im9)
 
     fig.suptitle(title_anim + f' for sample: {sample}', fontsize=16)
 
     def animate(i):
         # Subplot 2
-        arr1 = animated_tensor1[i]
-        im2.set_data(arr1)
+        im2.set_data(water_depth[i])
         tx2.set_text(f'Hour {i}: {feature_dic[feature1]}')
 
         # Subplot 3
-        arr2 = animated_tensor2[i]
-        im3.set_data(arr2)
+        im3.set_data(discharge[i])
         tx3.set_text(f'Hour {i}: {feature_dic[feature2]}')
 
         # Subplot 5
-        arr3 = animated_tensor3[i]
-        im5.set_data(arr3)
+        im5.set_data(wd_pred[i])
         tx5.set_text(f'Prediction: {feature_dic[feature1]}')
 
         # Subplot 6
-        arr4 = animated_tensor4[i]
-        im6.set_data(arr4)
+        im6.set_data(q_pred[i])
         tx6.set_text(f'Prediction: {feature_dic[feature2]}')
 
         # Subplot 8
-        arr5 = animated_tensor5[i]
-        im8.set_data(arr5)
+        im8.set_data(diff_wd[i])
         tx8.set_text(f'Diff: {feature_dic[feature1]}')
 
         # Subplot 9
-        arr6 = animated_tensor6[i]
-        im9.set_data(arr6)
+        im9.set_data(diff_q[i])
         tx9.set_text(f'Diff: {feature_dic[feature2]}')
 
     # Set up the animation
