@@ -295,7 +295,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
         # Subplot 2
         im2.set_data(water_depth[step])
 
-        # Subplot 3
+        # 3
         im3.set_data(discharge[step])
 
         # 5
