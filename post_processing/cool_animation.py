@@ -150,7 +150,7 @@ def animated_plot(figure, animated_tensor, axis,
     return image
 
 
-def plot_animation(sample, dataset, model, title_anim, scaler_x,
+def plot_animation(sample, dataset, model, train_val, scaler_x,
                    scaler_wd, scaler_q, device='cuda', save=False):
     '''
     Plot animation to visualize the evolution of certain variables over time.
@@ -165,8 +165,13 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
         Normalized dataset of train_val or test (1, 2, or 3).
     model : class of model
         Model to predict on the sample.
-    title_anim : str
-        Title of the animation.
+    train_val : str
+        key for specifying what we are using the model for
+            'train_val' = train and validate the model
+            'test1' = test the model with dataset 1
+            'test2' = test the model with dataset 2
+            'test3' = test the model with dataset 3
+        Used in the title of the animation.
     scaler_x : instance of normalizer
         Used on inputs.
     scaler_wd : instance of normalizer
@@ -178,7 +183,7 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     save : bool
         Default is False. If True, will save the animation in the
         post_processing folder with the title in the format:
-        'title_anim + model_who + sample'.
+        'train_val + model_who + sample'.
     
     Raises
     ------
@@ -200,7 +205,7 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
-        input, target, title_anim, scaler_x, scaler_wd, scaler_q, sample)
+        input, target, train_val, scaler_x, scaler_wd, scaler_q, sample)
     
     # need to try and find a more generic way to do this
     model_who = str(model.__class__.__name__)
@@ -213,7 +218,7 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
         raise Exception('Need to check if statements to see if model is ' +
                         'implemented correctly')
         
-    _, wd_pred, q_pred = denormalize_dataset(input, preds, title_anim, scaler_x, scaler_wd, scaler_q, sample)
+    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q, sample)
 
 
     # Creating subplots
@@ -282,7 +287,7 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     diff_q = q_pred - discharge
     im9 = animated_plot(fig, diff_q, ax9, 'discharge', True)
 
-    title_con = title_anim + f' for sample {sample} using model: ' + model_who
+    title_con = train_val + f' for sample {sample} using model: ' + model_who
     over_title = fig.suptitle('Hour 1: ' + title_con, fontsize=16) # try and update this to show the hour
 
     def animate(step):
@@ -310,7 +315,7 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     plt.show()
 
     if save == True:
-        ani.save('post_processing/' + title_anim + '_' + model_who + '_' +
+        ani.save('post_processing/' + train_val + '_' + model_who + '_' +
                  str(sample) + '.gif', writer='Pillow', fps=5)
     elif save == False:
         None
