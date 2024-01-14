@@ -8,6 +8,29 @@ import numpy as np
 from pre_processing.normalization import denormalize_dataset
 
 def definitions(index):
+    '''
+    Function that contains dictionaries to keep the naming and units constant
+    in plots
+
+    Parameters
+    ----------
+    index : int
+        0 represents water depth
+        1 represents discharge
+        
+    Raises
+    ------
+    Exception
+        'Variable "index" must be 0 or 1'
+
+    Returns
+    -------
+    name : str
+        Name of variable
+    unit : str
+        Units of variable
+
+    '''
     feature_dic = {
         0: 'Water Depth',
         1: 'Discharge per Meter Width'
@@ -17,17 +40,70 @@ def definitions(index):
         0: r'$m$',
         1: r'$m^3 s^{-1} m^{-1}$'
     }
-    name = feature_dic[index]
-    unit = feature_dic_units[index]
+    if index != 0 and index !=1:
+        raise Exception('Variable "index" must be 0 or 1')
+    else:
+        name = feature_dic[index]
+        unit = feature_dic_units[index]
     return name, unit
 
 def find_axes(axis):
+    '''
+    Define which axes will be used to place the colorbar
+
+    Parameters
+    ----------
+    axis : instance of an axes class of matplotlib
+        subplot that needs to have axes locatable to place colorbar
+
+    Returns
+    -------
+    cax : instance of an axes class of matplotlib
+        axes into which the colorbar will be drawn
+
+    '''
     div = make_axes_locatable(axis)
     cax = div.append_axes('right', '5%', '5%')
     return cax
 
 def animated_plot(figure, animated_tensor, axis,
                   variable, diff = False, prediction = False):
+    '''
+    Function used to generalise animated plots
+
+    Parameters
+    ----------
+    figure : instance of a figure class of matplotlib
+        Figure used in the subplots
+    animated_tensor : torch.tensor
+        Tensor that needs to be animated
+    axis : instance of an axes class of matplotlib
+        Subplot that will contain the animated tensor
+    variable : str
+        Name of variable that will be animated
+        Two options available: "water_depth" and "discharge"
+    diff : bool, optional
+        Identifier that defines whether the subplot is used for a difference.
+        The default is False.
+    prediction : bool, optional
+        Identifier that defines whether the subplot is used for a prediction
+        or a target.
+        The default is False.
+
+    Raises
+    ------
+    Exception
+        Check "variable" input
+    TypeError
+        Check type of "prediction" and "diff" inputs.
+
+    Returns
+    -------
+    image : instance of an image class of matplotlib
+        Image that will be updated in the "animation" function for each time
+        step.
+
+    '''
     # Set color maps, units and titles
     if variable == 'water_depth':
         cmap = 'Blues'
@@ -103,7 +179,15 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
         Default is False. If True, will save the animation in the
         post_processing folder with the title in the format:
         'title_anim + model_who + sample'.
-
+    
+    Raises
+    ------
+    Exception
+        Problem with the implementation of the model, check if statements after
+        the variable "model_who" is defined
+    TypeError
+        Check the type of save
+        
     Returns
     -------
     None.
@@ -126,7 +210,8 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
     elif model_who == 'UNet':
         preds = model(dataset[sample][0]).to(device).detach().cpu()
     else:
-        raise Exception('Need to check if statements to see if model is implemented')
+        raise Exception('Need to check if statements to see if model is ' +
+                        'implemented correctly')
         
     _, wd_pred, q_pred = denormalize_dataset(input, preds, title_anim, scaler_x, scaler_wd, scaler_q, sample)
 
@@ -208,27 +293,28 @@ def plot_animation(sample, dataset, model, title_anim, scaler_x,
         # Subplot 3
         im3.set_data(discharge[step])
 
-        # Subplot 5
+        # 5
         im5.set_data(wd_pred[step])
 
-        # Subplot 6
+        # 6
         im6.set_data(q_pred[step])
 
-        # Subplot 8
+        # 8
         im8.set_data(diff_wd[step])
 
-        # Subplot 9
+        # 9
         im9.set_data(diff_q[step])
 
     # Set up the animation
     ani = animation.FuncAnimation(fig, animate, frames = time_steps)
-
-    # Display the animation
     plt.show()
 
-    # Save the animation if specified
-    if save:
+    if save == True:
         ani.save('post_processing/' + title_anim + '_' + model_who + '_' +
                  str(sample) + '.gif', writer='Pillow', fps=5)
+    elif save == False:
+        None
+    else:
+        raise TypeError('Variable "save" must be a boolean')
 
     return None

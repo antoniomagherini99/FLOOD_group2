@@ -1,13 +1,10 @@
 # file for storing functions used for loading datasets
-# 1st version - Antonio
+
 import torch 
 import os
 import re
 
 import numpy as np
-
-#from numba import jit, prange  
-
 
 def retrieve_path(train_val_test):
     """
@@ -36,14 +33,13 @@ def retrieve_path(train_val_test):
 
 # ------------- #
 
-def count_pixels(file_id, train_val_test):
+def count_pixels(train_val_test):
     """
-    Calculate the number of pixels contained in row/column of image
+    Calculate the number of pixels contained in row/column of image of a
+    given dataset
 
     Parameters
     ----------
-    file_id : int
-        Identifier of the DEM file to be processed.
     train_val_test : str
         key for specifying what we are using the model for
             'train_val' = train and validate the model
@@ -58,7 +54,13 @@ def count_pixels(file_id, train_val_test):
 
     """
     dir_path = retrieve_path(train_val_test)
-    file_path = dir_path + f'DEM/DEM_{file_id}.txt' # arbitrary to choose DEM
+    
+    folder_path = dir_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+    for path in os.listdir(folder_path):
+        file_number = re.search(r'\d{1,5}', path)
+        break # all files in a folder have the same number of pixels
+    
+    file_path = folder_path + f'/DEM_{int(file_number.group())}.txt'
     
     elevation_data = np.loadtxt(file_path)
 
@@ -246,7 +248,6 @@ def compute_targets(file_id, train_val_test = 'train_val', time_step = 0, pixel_
 
 # ------------- #
 
-# @jit(parallel=True)
 def load_all_boys(train_val_test, time=97):
     '''
     Load all "file_id" and "time_step" for chosen dataset
@@ -267,15 +268,12 @@ def load_all_boys(train_val_test, time=97):
     count = 0
     dir_path = file_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
     for path in os.listdir(dir_path):
-        if count == 0:
-            file_number = re.search(r'\d{1,5}', path)
-            pixel_square = count_pixels(int(file_number.group()), train_val_test)
-        else:
-            None
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
         else:
             None
+    
+    pixel_square = count_pixels(train_val_test)
     inputs = torch.zeros((count, 3, pixel_square, pixel_square))
     targets = torch.zeros((count, time, 2, pixel_square, pixel_square))
 
@@ -284,8 +282,11 @@ def load_all_boys(train_val_test, time=97):
         file_number = re.search(r'\d{1,5}', path)
         print(file_number)
         print(int(file_number.group()))
-        inputs[i] = process_elevation_data(int(file_number.group()), train_val_test, pixel_square)
+        inputs[i] = process_elevation_data(int(file_number.group()),
+                                           train_val_test, pixel_square)
         for t in range(time):
-            targets[i, t] = compute_targets(int(file_number.group()), train_val_test, time_step = t, pixel_square = pixel_square)
+            targets[i, t] = compute_targets(int(file_number.group()),
+                                            train_val_test, time_step = t,
+                                            pixel_square = pixel_square)
         i += 1
     return inputs, targets

@@ -92,16 +92,11 @@ def decode_from_csv(train_val_test):
     count = 0
     dir_path = retrieve_path(train_val_test) + 'DEM/' # Arbitrary choice as DEM, VX, VY and WD all have the same number of samples
     for path in os.listdir(dir_path):
-        if count == 0:
-            file_number = re.search(r'\d{1,5}', path)
-            pixel_square = count_pixels(int(file_number.group()), train_val_test)
-        else:
-            None
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
         else:
             None
-
+    pixel_square = count_pixels(train_val_test)
     shape_inputs = (count, 3, pixel_square, pixel_square)
     shape_targets = (count, 97, 2, pixel_square, pixel_square)
 
