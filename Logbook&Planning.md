@@ -163,3 +163,17 @@ Everyone: PP presentation, report, other to be discussed.
 - Lucas (1h)
 1. Split conv_lstm notebooks into two, one of them is now only for training
    The other is only for testing
+- All (2h)
+1. Prepare for interim presentation and present.
+- Antonio and Lucas (2.5h)
+1. Implemented feedback to normalize and denormalize the targets seperately
+2. Added a 1x1 kernel to the conv lstm model to increase the number of hidden dimensions.
+- Antonio (0.5 h)
+1. Run new model
+
+13/1/24
+- Antonio and Lucas (1h)
+1. Reviewed outputs of 'new' conv lstm model, realised it has the same test loss, even though validation loss was decrease by almost 2 orders of magnitude
+- Lucas (4h)
+1. Worked on post processing to implement feedback. Made it clearer where BC was located and added a new subplot for loss per frame.
+2. Code cleanup, to make functions more versatile and easier to change.
