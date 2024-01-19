@@ -50,10 +50,14 @@ Everyone: PP presentation, report, other to be discussed.
 - Apostolos (2.5 h). 
 1. Studying project's given dataset and python code. 
 2. Realization of given dataset structure.
+- David (2 h).
+1. Studying reference papers + making initial notes for the report.
 
 19/12/2023 
 - Apostolos and David meeting (0.5 h). 
 1. Discussion about the given dataset structure. Discussion about Interaction Visualization and it's possible application on the project.
+- David (2.5 h).
+1. Exploration Interactive Visualization (using Vega-Altair) and its applicability on the project.
 
 - Apostolos (0.5h). 
 1. Discussion with project's tutor about additional instructions, explanations and possible progress steps.
@@ -177,3 +181,12 @@ Everyone: PP presentation, report, other to be discussed.
 - Lucas (4h)
 1. Worked on post processing to implement feedback. Made it clearer where BC was located and added a new subplot for loss per frame.
 2. Code cleanup, to make functions more versatile and easier to change.
+
+17/1/24
+- David (1h)
+1. Studying CNN model code and making initial notes for the report
+
+18/1/24
+- David (4h)
+1. Added way to visualize the model architecture + tested this on the CNN model. Tried (unsuccessfully to make the resulting visualization more legible by grouping blocks. 
+2. Wrote sub-sections on CNN data pre-processing, model architecture and model training for the report.
