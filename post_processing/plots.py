@@ -30,7 +30,7 @@ def plot_losses(train_losses, validation_losses, model):
 
     return None
 
-def plot_test_loss(dataset, model, train_val, device = 'cuda'):
+def plot_test_loss(dataset, model, train_val, device):
     '''
     Plot test loss for each sample of the requested dataset and model
 
@@ -48,7 +48,7 @@ def plot_test_loss(dataset, model, train_val, device = 'cuda'):
             'test3' = test the model with dataset 3
         Used in the title of the animation.
     device : str
-        Device on which to perform the computations; 'cuda' is the default.
+        Device on which to perform the computations
 
     Returns
     -------

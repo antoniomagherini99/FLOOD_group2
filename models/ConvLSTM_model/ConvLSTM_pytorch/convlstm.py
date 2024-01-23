@@ -178,9 +178,9 @@ class ConvLSTM(nn.Module):
         if not self.return_all_layers:
             layer_output_list = layer_output_list[-1:]
             last_state_list = last_state_list[-1:]
-        if self.return_all_layers:
-            layer_output_list = layer_output_list[1:]
-            last_state_list = last_state_list[1:]
+#        if self.return_all_layers:
+ #           layer_output_list = layer_output_list[1:]
+  #          last_state_list = last_state_list[1:]
         return layer_output_list, last_state_list
 
     def _init_hidden(self, batch_size, image_size):

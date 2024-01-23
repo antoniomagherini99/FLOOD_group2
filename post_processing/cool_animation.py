@@ -6,6 +6,7 @@ import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
+from post_processing.metrics import confusion_mat_sample
 
 def definitions(index):
     '''
@@ -207,7 +208,6 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     elevation, water_depth, discharge = denormalize_dataset(
         input, target, train_val, scaler_x, scaler_wd, scaler_q, sample)
     
-    # need to try and find a more generic way to do this
     model_who = str(model.__class__.__name__)
     if model_who == 'ConvLSTM':
         sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device))  # create a batch of 1?
@@ -244,27 +244,29 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     ax4.set_title('Breach Location')
     
     # Subplot 7
-    features = target.shape[1]
+    recall, _, _ = confusion_mat_sample(sample, dataset, model, device)
+    
+    #features = target.shape[1]
     time_steps = target.shape[0]
     
-    losses = np.zeros((features, time_steps)) # initialize empty array
+    #losses = np.zeros((features, time_steps)) # initialize empty array
     time_step_array = np.arange(1, time_steps + 1)
     
     # Compute losses uses MSELoss
-    for step in range(time_steps):
-        for feature in range(features):
-            losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
+    #for step in range(time_steps):
+        #for feature in range(features):
+            #losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
             
     wd_label, _ = definitions(0)
     q_label, _ = definitions(1)
     
     # Start Plotting
     ax7.set_box_aspect(1)
-    ax7.plot(time_step_array, losses[0], label = wd_label)
-    ax7.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax7.set_title('Losses per Hour')
+    ax7.plot(time_step_array, recall[0], label = wd_label)
+    ax7.plot(time_step_array, recall[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
+    ax7.set_title('Recall per Hour')
     ax7.set_xlabel('Time Steps, hours')
-    ax7.set_ylabel('Normalized Losses [-]')
+    ax7.set_ylabel('Recall [-]')
     ax7.legend()
 
     # Subplot 2
