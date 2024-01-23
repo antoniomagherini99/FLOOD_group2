@@ -190,3 +190,9 @@ Everyone: PP presentation, report, other to be discussed.
 - David (4h)
 1. Added way to visualize the model architecture + tested this on the CNN model. Tried (unsuccessfully to make the resulting visualization more legible by grouping blocks. 
 2. Wrote sub-sections on CNN data pre-processing, model architecture and model training for the report.
+
+23/1/24
+- Lucas (2h)
+1. Started implementing more metrics to test the ability of each model
+- Antonio (2h)
+1. Started implementing data augmentation to reduce the loss of dataset 2. Rotation and flipping were considered. The ease of flipping makes it attractive.

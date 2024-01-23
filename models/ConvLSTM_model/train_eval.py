@@ -14,7 +14,8 @@ def train_epoch_conv_lstm(model, loader, optimizer, device):
 
         # Model prediction
         preds, _ = model(x)
-        list_preds = torch.cat(preds, dim=1) # concat over the dimension 1 (time steps)
+        # concat over the dimension 1 (time steps)
+        list_preds = torch.cat(preds, dim=1)
         # MSE loss function
         loss = nn.MSELoss()(list_preds, y)
         
