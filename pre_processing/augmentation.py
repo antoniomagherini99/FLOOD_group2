@@ -8,7 +8,7 @@ import os
 
 import torch
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-from torchvision import tv_tensors
+# from torchvision import tv_tensors
 from torchvision.transforms import v2 as transforms
 from torchvision.transforms.v2 import functional as F
 
@@ -43,18 +43,17 @@ def augmentation(train_dataset, p_hflip=0.5, p_vflip=0.5, range_t=len(train_data
 
     # transform dataset
     transformed_dataset = [transformation_pipeline(train_dataset) for _ in range(range_t)]
-    
     #plot([orig_img] + transformed_dataset)
     return transformed_dataset
 
-def plot(imgs, row_title=None, **imshow_kwargs):
+def plot(dataset, row_title=None, **imshow_kwargs):
     """Plooting function taken from https://raw.githubusercontent.com/pytorch/vision/main/gallery/transforms/helpers.py"""
     if not isinstance(imgs[0], list):
         # Make a 2d grid even if there's just 1 row
         imgs = [imgs]
 
-    num_rows = len(imgs)
-    num_cols = len(imgs[0])
+    num_rows = len(dataset)
+    num_cols = len(dataset[0])
     _, axs = plt.subplots(nrows=num_rows, ncols=num_cols, squeeze=False)
     for row_idx, row in enumerate(imgs):
         for col_idx, img in enumerate(row):
