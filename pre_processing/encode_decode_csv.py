@@ -1,3 +1,5 @@
+# .py file containing the functions used for encoding and decoding the datasets for faster uploading it in ConvLSTM model for DSAIE FLOOD project.
+
 import pandas as pd
 import torch
 import os
