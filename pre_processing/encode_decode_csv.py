@@ -100,7 +100,7 @@ def decode_from_csv(train_val_test):
             None
     pixel_square = count_pixels(train_val_test)
     shape_inputs = (count, 3, pixel_square, pixel_square)
-    shape_targets = (count, 97, 2, pixel_square, pixel_square)
+    shape_targets = (count, 97, 2, pixel_square, pixel_square) # 97 !!! not true for dataset 3
 
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
@@ -109,7 +109,7 @@ def decode_from_csv(train_val_test):
     inputs = inputs.unsqueeze(1) # demonstrate that inputs has 1 time step
     
     boundary = targets[:, 0, 0].unsqueeze(1).unsqueeze(1) # only interested in water depth, discharge is zeros
-    targets = targets[:, 2::2] # remove boundaries from targets and half time steps
+    targets = targets[:, 2::2] # remove boundaries from targets and halve the time steps
     
     inputs = torch.cat((inputs, boundary), dim = 2)
     

@@ -166,21 +166,20 @@ class ConvLSTM(nn.Module):
                 h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :], 
                                                  cur_state=[h, c])
                 output_inner.append(h)
-
+            
             layer_output = torch.stack(output_inner, dim=1)
             cur_layer_input = layer_output
-            layer_output_1kernel = self.conv2(layer_output[:,0]).unsqueeze(1) # 1x1 kernel to reduce from hidden dim to number of outputs
-            final_layer_output = F.relu(layer_output_1kernel) # non linear activation to prevent negative outputs
-
+            final_layer_output = torch.zeros((b, seq_len, 2, 64, 64))
+            for t in range(seq_len):
+                final_layer_output[:, t] = F.relu(self.conv2(layer_output[:, t])) # 1x1 kernel to reduce from hidden dim to number of outputs
+                
             layer_output_list.append(final_layer_output)
             last_state_list.append([h, c])
 
         if not self.return_all_layers:
             layer_output_list = layer_output_list[-1:]
             last_state_list = last_state_list[-1:]
-#        if self.return_all_layers:
- #           layer_output_list = layer_output_list[1:]
-  #          last_state_list = last_state_list[1:]
+
         return layer_output_list, last_state_list
 
     def _init_hidden(self, batch_size, image_size):
