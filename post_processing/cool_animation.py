@@ -6,6 +6,7 @@ import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
+from post_processing.metrics import confusion_mat, obtain_predictions
 
 def definitions(index):
     '''
@@ -201,22 +202,14 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     # Extracting information from the dataset
     input = dataset[sample][0]
     target = dataset[sample][1]
-    boundary_condition = input[0, 3]
+    boundary_condition = input[0][3]
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
         input, target, train_val, scaler_x, scaler_wd, scaler_q)
     
-    # need to try and find a more generic way to do this
     model_who = str(model.__class__.__name__)
-    if model_who == 'ConvLSTM':
-        sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device))  # create a batch of 1?
-        preds = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
-    elif model_who == 'UNet':
-        preds = model(dataset[sample][0]).to(device).detach().cpu()
-    else:
-        raise Exception('Need to check if statements to see if model is ' +
-                        'implemented correctly')
+    preds = obtain_predictions(model, input, device)
         
     _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q, sample)
 
@@ -233,20 +226,15 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
     ax1.set_title('Elevation')
-
-    # Subplot 4
+    ax1.imshow(boundary_condition.cpu(), cmap='binary', origin='lower')
     non_zero_indices = torch.nonzero(boundary_condition)
     non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
-    
-    ax4.imshow(boundary_condition, cmap='binary', origin='lower')
-    ax4.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
+    ax1.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
                 clip_on = False, clip_box = plt.gca().transData)
-    ax4.set_title('Breach Location')
-    
-    # Subplot 7
+
+    # Subplot 4
     features = target.shape[1]
     time_steps = target.shape[0]
-    
     losses = np.zeros((features, time_steps)) # initialize empty array
     time_step_array = np.arange(1, time_steps + 1)
     
@@ -254,17 +242,28 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     for step in range(time_steps):
         for feature in range(features):
             losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
-            
+    
     wd_label, _ = definitions(0)
     q_label, _ = definitions(1)
     
     # Start Plotting
+    ax4.set_box_aspect(1)
+    ax4.plot(time_step_array, losses[0], label = wd_label)
+    ax4.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
+    ax4.set_title('Losses per Hour')
+    ax4.set_xlabel('Time steps, hours since breach')
+    ax4.set_ylabel('Normalized Loss [-]')
+    ax4.legend()
+    
+    # Subplot 7
+    recall, _, _ = confusion_mat(dataset, model, device, True, sample)
+
     ax7.set_box_aspect(1)
-    ax7.plot(time_step_array, losses[0], label = wd_label)
-    ax7.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax7.set_title('Losses per Hour')
-    ax7.set_xlabel('Time Steps, hours')
-    ax7.set_ylabel('Normalized Losses [-]')
+    ax7.plot(time_step_array, recall[0], label = wd_label)
+    ax7.plot(time_step_array, recall[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
+    ax7.set_title('Recall per Hour')
+    ax7.set_xlabel('Time steps, hours since breach')
+    ax7.set_ylabel('Recall [-]')
     ax7.legend()
 
     # Subplot 2

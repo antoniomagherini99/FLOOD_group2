@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 from pre_processing.normalization import *
+from post_processing.metrics import confusion_mat, obtain_predictions
 
 def plot_losses(train_losses, validation_losses, model):
     '''
@@ -32,7 +33,7 @@ def plot_losses(train_losses, validation_losses, model):
 
     return None
 
-def plot_test_loss(dataset, model, train_val, device = 'cuda'):
+def plot_test_loss(dataset, model, train_val, device):
     '''
     Plot test loss for each sample of the requested dataset and model
 
@@ -50,7 +51,7 @@ def plot_test_loss(dataset, model, train_val, device = 'cuda'):
             'test3' = test the model with dataset 3
         Used in the title of the animation.
     device : str
-        Device on which to perform the computations; 'cuda' is the default.
+        Device on which to perform the computations
 
     Returns
     -------
@@ -65,13 +66,8 @@ def plot_test_loss(dataset, model, train_val, device = 'cuda'):
     
     for sample in range(num_samples):
         target = dataset[sample][1]
+        preds = obtain_predictions(model, dataset[sample][0], device)
         
-        if model_who == 'ConvLSTM':
-            sample_list, _ = model(dataset[sample][0].unsqueeze(0).to(device))  # create a batch of 1?
-            preds = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
-        elif model_who == 'UNet':
-            preds = model(dataset[sample][0]).to(device).detach().cpu()
-            
         loss_sample[sample] = nn.MSELoss()(preds, target)
     
     plt.figure()
@@ -146,3 +142,23 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss
     plt.show()
 
     return None
+def plot_metrics(dataset, model, train_val, device):
+    model_who = str(model.__class__.__name__)
+    recall, accuracy, f1 = confusion_mat(dataset, model, device)
+    
+    num_samples = len(dataset)
+    sample_array = np.arange(0, num_samples)
+    
+    plt.figure()
+    plt.scatter(sample_array, recall, label = 'Recall')
+    plt.scatter(sample_array, accuracy, label = 'Accuracy')
+    plt.scatter(sample_array, f1, label = 'F1')
+    plt.xticks(range(num_samples))
+    plt.xlabel('Sample Number')
+    plt.ylabel('Score [-]')
+    plt.title(model_who + ': ' + train_val + ' metrics for each sample (WD only)')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    return None
+        
