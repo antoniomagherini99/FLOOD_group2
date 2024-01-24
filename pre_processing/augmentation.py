@@ -24,7 +24,7 @@ class MultiFixedRotation:
 
 fixed_angles = [0, 90, 180, 270]
 
-def augmentation(train_dataset, p_hflip=0.5, p_vflip=0.5, range_t=len(train_dataset)): #angles=fixed_angles, 
+def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True): #angles=fixed_angles, 
     '''
     Function for implementing data augmentation of inputs (DEM, X- and Y-Slope, 
     Water Depth and Discharge).
@@ -43,8 +43,12 @@ def augmentation(train_dataset, p_hflip=0.5, p_vflip=0.5, range_t=len(train_data
 
     # transform dataset
     transformed_dataset = [transformation_pipeline(train_dataset) for _ in range(range_t)]
+    full_dataset = list(torch.utils.data.ConcatDataset([train_dataset, transformed_dataset], ))
+    # full_dataset = torch.cat([train_dataset, transformed_dataset], dim=0)
     #plot([orig_img] + transformed_dataset)
-    return transformed_dataset
+    print(type(train_dataset))
+    print(type(full_dataset))
+    return full_dataset if full==True else transformed_dataset
 
 def plot(dataset, row_title=None, **imshow_kwargs):
     """Plooting function taken from https://raw.githubusercontent.com/pytorch/vision/main/gallery/transforms/helpers.py"""
