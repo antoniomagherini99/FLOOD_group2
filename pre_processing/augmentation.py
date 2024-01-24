@@ -8,7 +8,7 @@ import os
 
 import torch
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-# from torchvision import tv_tensors
+from torchvision import tv_tensors
 from torchvision.transforms import v2 as transforms
 from torchvision.transforms.v2 import functional as F
 
