@@ -25,28 +25,27 @@ def scaler(train_dataset, scaler_x=MinMaxScaler(), scaler_wd=MinMaxScaler(), sca
     
     return scaler_x, scaler_wd, scaler_q
 
-def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q):
+def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
     '''
     Function for normalizing every dataset. 
 
     Inputs: dataset = dataset to be normalized
             scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
                                             with the scaler function
+            train_val = str, 
 
     Outputs: normalized_dataset = dataset after normalization 
     '''
-    min_x, max_x = scaler_x.data_min_[0], scaler_x.data_max_[0]
-    min_wd, max_wd = scaler_wd.data_min_[0], scaler_wd.data_max_[0]
-    min_q, max_q = scaler_q.data_min_[0], scaler_q.data_max_[0]
+    len_time = dataset[0][1].shape[0]
+    pixels = count_pixels(train_val)
+    input_features = dataset[0][0].shape[1]
     normalized_dataset = []
     for idx in range(len(dataset)):
-        x = dataset[idx][0]
-        wd = dataset[idx][1][:, 0]
-        q = dataset[idx][1][:, 1]
-        norm_x = (x - min_x) / (max_x - min_x)
-        norm_wd = (wd - min_wd) / (max_wd - min_wd)
-        norm_q = (q - min_q) / (max_q - min_q)
-        norm_y = torch.cat((norm_wd.unsqueeze(1), norm_q.unsqueeze(1)), dim = 1)
+        norm_x = torch.FloatTensor(scaler_x.transform(dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels)))
+        norm_wd = torch.FloatTensor(scaler_wd.transform(dataset[idx][1][:, 0].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
+        norm_q = torch.FloatTensor(scaler_q.transform(dataset[idx][1][:, 1].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
+        
+        norm_y = torch.cat((norm_wd, norm_q), dim = 1)
         normalized_dataset.append((norm_x, norm_y))
     return normalized_dataset
 
@@ -66,9 +65,10 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
     q = outputs[:, 1] #.permute(1, 0, 2, 3)
 
     pixels = count_pixels(train_val)
+    input_features = inputs.shape[1]
 
     # denormalize inputs and targets 
-    elevation = scaler_x.inverse_transform(x.reshape(4, -1).T.cpu())[:, 0].reshape(pixels, pixels)
+    elevation = scaler_x.inverse_transform(x.reshape(input_features, -1).T.cpu()).T.reshape(4, pixels, pixels)[0]
 
     water_depth = scaler_wd.inverse_transform(wd.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
     discharge = scaler_q.inverse_transform(q.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
