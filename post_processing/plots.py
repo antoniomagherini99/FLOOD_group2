@@ -81,7 +81,7 @@ def plot_test_loss(dataset, model, train_val, device):
     
     return None
 
-def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss_q, recall):
+def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, model, device):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge)
@@ -96,17 +96,32 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss
     # get inputs and outputs
     input = dataset[:][0]
     target = dataset[:][1]
-    boundary_condition = input[0, 3]
+    # boundary_condition = input[0, 3]
 
     # denormalize dataset
     elevation, water_depth, discharge = denormalize_dataset(input, target, train_val, 
                                                             scaler_x, scaler_wd, scaler_q)
     
+    # Compute losses uses MSELoss
+    # model_who = str(model.__class__.__name__)
+    preds = obtain_predictions(model, input, device)
+
+    features = target.shape[1]
+    time_steps = target.shape[0]
+    losses = np.zeros((features, time_steps)) # initialize empty array
+    time_step_array = np.arange(1, time_steps + 1)
+
+    for step in range(time_steps):
+        for feature in range(features):
+            losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
+    
     # compute average loss for sorting dataset
-    avg_loss = np.mean(loss_wd, loss_q)
+    avg_loss = np.mean(losses[0, :], losses[1, :])
+
+    # compute recall
+    recall, _, _ = confusion_mat(dataset, model, device)
 
     # sorting dataset
-
     elevation_sorted = sorted(elevation, avg_loss)
     sorted_indexes = [index for index, _ in elevation_sorted]
     wd_sorted, q_sorted = [water_depth[i] for i in sorted_indexes], [discharge[i] for i in sorted_indexes]
@@ -121,10 +136,10 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss
     # create second y-axis for discharge scale
     ax1_2 = axes[1].twinx()
 
-    axes[0].plot(sorted_indexes, elevation_var)
-    axes[1].plot(sorted_indexes, wd_sorted)
-    ax1_2.plot(sorted_indexes, q_sorted)
-    axes[2].scatter(sorted_indexes, sorted_recall)
+    axes[0].boxplot(sorted_indexes, elevation_var, label='DEM')
+    axes[1].plot(sorted_indexes, wd_sorted, color='blue', label='water depth')
+    ax1_2.plot(sorted_indexes, q_sorted, color='red', label='discharge')
+    axes[2].scatter(sorted_indexes, sorted_recall, color='green', label='recall')
 
     for ax in axes:
         ax.set_xlabel('Sample ID')
@@ -142,6 +157,7 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss
     plt.show()
 
     return None
+
 def plot_metrics(dataset, model, train_val, device):
     model_who = str(model.__class__.__name__)
     recall, accuracy, f1 = confusion_mat(dataset, model, device)

@@ -58,7 +58,7 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
             scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
                                             with the scaler function
 
-    Outputs: normalized_dataset = dataset after normalization 
+    Outputs: denormalized_dataset = dataset after denormalization 
     '''
     x = inputs #inputs 
     wd = outputs[:, 0] #.permute(1, 0, 2, 3)
