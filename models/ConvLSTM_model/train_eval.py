@@ -48,9 +48,6 @@ def evaluation_conv_lstm(model, loader, device):
         loss = nn.MSELoss()(list_preds, y)
         
         losses.append(loss.cpu().detach())
-        
-        # Backpropagate and update weights
-        loss.backward()   # compute the gradients using backpropagation
 
     losses = np.array(losses).mean()
 
