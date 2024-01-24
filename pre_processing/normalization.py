@@ -65,9 +65,10 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
     q = outputs[:, 1] #.permute(1, 0, 2, 3)
 
     pixels = count_pixels(train_val)
+    input_features = inputs.shape[1]
 
     # denormalize inputs and targets 
-    elevation = scaler_x.inverse_transform(x.reshape(4, -1).T.cpu())[:, 0].reshape(pixels, pixels)
+    elevation = scaler_x.inverse_transform(x.reshape(input_features, -1).T.cpu()).T.reshape(4, pixels, pixels)[0]
 
     water_depth = scaler_wd.inverse_transform(wd.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
     discharge = scaler_q.inverse_transform(q.reshape(1, -1).T.cpu()).reshape(48, pixels, pixels)
