@@ -1,20 +1,21 @@
 import torch
 
+def obtain_predictions(model, input, device):
+    model_who = str(model.__class__.__name__)
+    if model_who == 'ConvLSTM':
+        sample_list, _ = model(input.unsqueeze(0).to(device))  # create a batch of 1?
+        predictions = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
+    elif model_who == 'UNet':
+        predictions = model(input).to(device).detach().cpu()
+    else:
+        raise Exception('Need to check if statements to see if model is ' +
+                        'implemented correctly')
+    return predictions
+
 def threshold_function(tensor):
      '''
      Use a tensor to return a binary tensor which has ones at non zero elements
      and zeros at zero elements
-
-     Parameters
-     ----------
-     tensor : TYPE
-         DESCRIPTION.
-
-     Returns
-     -------
-     TYPE
-         DESCRIPTION.
-
      '''
      return torch.where(tensor > 0, torch.tensor(1), torch.tensor(0))
 
@@ -39,31 +40,43 @@ def binary_f1_score(pred_binary, target_binary):
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
     return f1
 
-def confusion_mat_sample(sample, dataset, model, device):
-    input = dataset[sample][0]
-    target = dataset[sample][1]
-    model_who = str(model.__class__.__name__)
-    if model_who == 'ConvLSTM':
-        sample_list, _ = model(input.unsqueeze(0).to(device))  # create a batch of 1?
-        preds = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
-    elif model_who == 'UNet':
-        preds = model(dataset[sample][0]).to(device).detach().cpu()
-    else:
-        raise Exception('Need to check if statements to see if model is ' +
-                        'implemented correctly')
+def confusion_mat(dataset, model, device, sample = False, sample_num = 0):
+    # only needed if sample == False
+    metrics_tensor = torch.zeros((3, len(dataset))) # recall, accuracy, f1
+    
+    for samples in range(len(dataset)):
+        if sample == True:
+            samples = sample_num
+        else:
+            None
+        input = dataset[samples][0]
+        target = dataset[samples][1]
+        preds = obtain_predictions(model, input, device)
         
-    target_binary = threshold_function(target)
-    pred_binary = threshold_function(preds)
-    
-    fet = target.shape[1]
-    time_steps = target.shape[0]
-    
-    recall_arr = torch.zeros((fet, time_steps))
-    accuracy_arr = torch.zeros((fet, time_steps))
-    f1_arr = torch.zeros((fet, time_steps))
-    for feature in range(fet):
-        for step in range(time_steps):
-            recall_arr[feature][step] = binary_recall(pred_binary[step][feature], target_binary[step][feature])
-            accuracy_arr[feature][step] = binary_accuracy(pred_binary[step][feature], target_binary[step][feature])
-            f1_arr[feature][step] = binary_f1_score(pred_binary[step][feature], target_binary[step][feature])
+        target_binary = threshold_function(target)
+        pred_binary = threshold_function(preds)
+        
+        fet = target.shape[1]
+        time_steps = target.shape[0]
+        
+        recall_arr = torch.zeros((fet, time_steps))
+        accuracy_arr = torch.zeros((fet, time_steps))
+        f1_arr = torch.zeros((fet, time_steps))
+        for feature in range(fet):
+            for step in range(time_steps):
+                recall_arr[feature][step] = binary_recall(pred_binary[step][feature], target_binary[step][feature])
+                accuracy_arr[feature][step] = binary_accuracy(pred_binary[step][feature], target_binary[step][feature])
+                f1_arr[feature][step] = binary_f1_score(pred_binary[step][feature], target_binary[step][feature])
+        if sample == False:
+            metrics_tensor[0, samples] = torch.mean(recall_arr[0]) # macro average of water depth only
+            metrics_tensor[1, samples] = torch.mean(accuracy_arr[0])
+            metrics_tensor[2, samples] = torch.mean(f1_arr[0])
+        elif sample == True:
+            break
+    if sample == False:
+        recall_arr = metrics_tensor[0]
+        accuracy_arr = metrics_tensor[1]
+        f1_arr = metrics_tensor[2]
+    else:
+        None
     return recall_arr, accuracy_arr, f1_arr
