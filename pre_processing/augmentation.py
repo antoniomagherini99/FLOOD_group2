@@ -8,7 +8,7 @@ import os
 
 import torch
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-from torchvision import tv_tensors
+# from torchvision import tv_tensors
 from torchvision.transforms import v2 as transforms
 from torchvision.transforms.v2 import functional as F
 
@@ -45,9 +45,11 @@ def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True): #
     transformed_dataset = [transformation_pipeline(train_dataset) for _ in range(range_t)]
     full_dataset = list(torch.utils.data.ConcatDataset([train_dataset, transformed_dataset], ))
     # full_dataset = torch.cat([train_dataset, transformed_dataset], dim=0)
+    
     #plot([orig_img] + transformed_dataset)
-    print(type(train_dataset))
-    print(type(full_dataset))
+    # print(type(train_dataset))
+    # print(type(full_dataset))
+    
     return full_dataset if full==True else transformed_dataset
 
 def plot(dataset, row_title=None, **imshow_kwargs):
