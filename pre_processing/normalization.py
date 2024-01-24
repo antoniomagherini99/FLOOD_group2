@@ -49,7 +49,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
         normalized_dataset.append((norm_x, norm_y))
     return normalized_dataset
 
-def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q, sample):
+def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q):
     '''
     Function for denormalizing every dataset. 
 

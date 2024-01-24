@@ -5,6 +5,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from pre_processing.normalization import *
+
 def plot_losses(train_losses, validation_losses, model):
     '''
     Function for plotting the training and validation losses of CNN and ConvLSTM models.
@@ -81,4 +83,66 @@ def plot_test_loss(dataset, model, train_val, device = 'cuda'):
     plt.grid()
     plt.show()
     
+    return None
+
+def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, loss_wd, loss_q, recall):
+    '''
+    Function for plotting the DEMs variation sorted in increasing order 
+    of average loss (of Water Depth and Discharge)
+
+    Input: dataset = tensor, normalized dataset
+           train_val_test : str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
+           scaler_x, scaler_wd, scaler_q = scalers for inputs (x) and targets (water depth and discharge), created 
+                                            with the scaler function 
+    Output: None (plot)
+    '''
+    
+    # get inputs and outputs
+    input = dataset[:][0]
+    target = dataset[:][1]
+    boundary_condition = input[0, 3]
+
+    # denormalize dataset
+    elevation, water_depth, discharge = denormalize_dataset(input, target, train_val, 
+                                                            scaler_x, scaler_wd, scaler_q)
+    
+    # compute average loss for sorting dataset
+    avg_loss = np.mean(loss_wd, loss_q)
+
+    # sorting dataset
+
+    elevation_sorted = sorted(elevation, avg_loss)
+    sorted_indexes = [index for index, _ in elevation_sorted]
+    wd_sorted, q_sorted = [water_depth[i] for i in sorted_indexes], [discharge[i] for i in sorted_indexes]
+    sorted_recall = [recall[i] for i in sorted_indexes]
+
+    elevation_var = np.std(elevation_sorted)
+    
+    # plot 
+    fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)
+    fig.subplots_adjust(wspace=0.5)
+
+    # create second y-axis for discharge scale
+    ax1_2 = axes[1].twinx()
+
+    axes[0].plot(sorted_indexes, elevation_var)
+    axes[1].plot(sorted_indexes, wd_sorted)
+    ax1_2.plot(sorted_indexes, q_sorted)
+    axes[2].scatter(sorted_indexes, sorted_recall)
+
+    for ax in axes:
+        ax.set_xlabel('Sample ID')
+    
+    axes[0].set_ylabel('Normalized variation [-]')
+    axes[1].set_ylabel('Normalized Water Depth loss [-]')
+    ax1_2.set_ylabel('Normalized Discharge loss [-]')
+    axes[2].set_ylabel('Recall [-]')
+
+    axes[0].set_title('Normalized DEM variation [-]')
+    axes[1].set_title('Normalized MSE loss [-]')
+    axes[2].set_title('Recall [-]')
+
+    plt.legend()
+    plt.show()
+
     return None

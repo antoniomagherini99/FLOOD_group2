@@ -205,7 +205,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
-        input, target, train_val, scaler_x, scaler_wd, scaler_q, sample)
+        input, target, train_val, scaler_x, scaler_wd, scaler_q)
     
     # need to try and find a more generic way to do this
     model_who = str(model.__class__.__name__)
