@@ -209,12 +209,12 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
-        input, target, train_val, scaler_x, scaler_wd, scaler_q, sample)
+        input, target, train_val, scaler_x, scaler_wd, scaler_q)
     
     model_who = str(model.__class__.__name__)
     preds = obtain_predictions(model, input, device, time_steps)
         
-    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q, sample)
+    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q)
 
 
     # Creating subplots

@@ -42,6 +42,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
     normalized_dataset = []
     for idx in range(len(dataset)):
         norm_x = torch.FloatTensor(scaler_x.transform(dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels)))
+        
         norm_wd = torch.FloatTensor(scaler_wd.transform(dataset[idx][1][:, 0].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
         norm_q = torch.FloatTensor(scaler_q.transform(dataset[idx][1][:, 1].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
         
@@ -49,7 +50,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
         normalized_dataset.append((norm_x, norm_y))
     return normalized_dataset
 
-def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q, sample):
+def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q):
     '''
     Function for denormalizing every dataset. 
 
@@ -58,7 +59,7 @@ def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_
             scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
                                             with the scaler function
 
-    Outputs: normalized_dataset = dataset after normalization 
+    Outputs: denormalized_dataset = dataset after denormalization 
     '''
     x = inputs #inputs 
     wd = outputs[:, 0] #.permute(1, 0, 2, 3)
