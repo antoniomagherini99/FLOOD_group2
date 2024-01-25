@@ -6,7 +6,8 @@ import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
-from post_processing.metrics import confusion_mat, obtain_predictions
+from post_processing.metrics import confusion_mat
+from models.ConvLSTM_model.train_eval import obtain_predictions
 
 def definitions(index):
     '''
@@ -203,13 +204,15 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     input = dataset[sample][0]
     target = dataset[sample][1]
     boundary_condition = input[0][3]
+    
+    time_steps = target.shape[0]
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
         input, target, train_val, scaler_x, scaler_wd, scaler_q, sample)
     
     model_who = str(model.__class__.__name__)
-    preds = obtain_predictions(model, input, device)
+    preds = obtain_predictions(model, input, device, time_steps)
         
     _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q, sample)
 
@@ -226,7 +229,6 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
     ax1.set_title('Elevation')
-    ax1.imshow(boundary_condition.cpu(), cmap='binary', origin='lower')
     non_zero_indices = torch.nonzero(boundary_condition)
     non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
     ax1.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
@@ -234,7 +236,6 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
 
     # Subplot 4
     features = target.shape[1]
-    time_steps = target.shape[0]
     losses = np.zeros((features, time_steps)) # initialize empty array
     time_step_array = np.arange(1, time_steps + 1)
     

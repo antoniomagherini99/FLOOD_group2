@@ -2,22 +2,72 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+def obtain_predictions(model, input, device, steps = 0):
+    '''
+    Obtain Predictions based on model class
+
+    Parameters
+    ----------
+    model : TYPE
+        DESCRIPTION.
+    input : TYPE
+        Expects at a minimum a tensor with shape (time_stpes, fetures, height, width).
+    device : TYPE
+        DESCRIPTION.
+    steps : int
+        Number of time steps, used by multistep convlstm model.
+        Default is 48
+
+    Raises
+    ------
+    Exception
+        DESCRIPTION.
+
+    Returns
+    -------
+    predictions : TYPE
+        Predictions from model
+
+    '''
+    model_who = str(model.__class__.__name__)
+    if model_who == 'ConvLstm' or model_who == 'MultiStepConvLSTM':
+        if len(input.shape) == 4: # no batch
+            input = input.unsqueeze(0) # create a batch of 1, model requires it to run
+            unbatch = True
+        else:
+            unbatch = False
+            
+        if model_who == 'ConvLSTM':
+            sample_list, _ = model(input.to(device))
+            predictions = torch.cat(sample_list, dim=1)
+            
+        elif model_who == 'MultiStepConvLSTM':
+            input = input.repeat(1, steps, 1, 1, 1) # Requires input at all time steps
+            predictions = model(input.to(device)).to(device)
+            
+        if unbatch:
+            predictions = predictions[0].detach().cpu() # remove batch
+        
+    elif model_who == 'UNet':
+        predictions = model(input).to(device).detach().cpu()
+    else:
+        raise Exception('Need to check if statements to see if model is ' +
+                        'implemented correctly')
+    return predictions
+
 def train_epoch_conv_lstm(model, loader, optimizer, device):
     model.to(device)
     model.train() # specifies that the model is in training mode
 
     losses = []
-
     for batch in loader:
-        x = batch[0].to(device)
+        sequence_length = batch[1].shape[1]
+        x = batch[0]
         y = batch[1].to(device)
 
-        # Model prediction
-        preds, _ = model(x)
-        # concat over the dimension 1 (time steps)
-        list_preds = torch.cat(preds, dim=1)
+        predictions = obtain_predictions(model, x, device, sequence_length)
         # MSE loss function
-        loss = nn.MSELoss()(list_preds, y)
+        loss = nn.MSELoss()(predictions, y)
         
         losses.append(loss.cpu().detach())
         
@@ -37,20 +87,15 @@ def evaluation_conv_lstm(model, loader, device):
     losses = []
 
     for batch in loader:
-        x = batch[0].to(device)
+        sequence_length = batch[1].shape[1]
+        x = batch[0]
         y = batch[1].to(device)
 
-        # Model prediction
-        preds, _ = model(x)
-        list_preds = torch.cat(preds, dim=1)
-
+        predictions = obtain_predictions(model, x, device, sequence_length)
         # MSE loss function
-        loss = nn.MSELoss()(list_preds, y)
+        loss = nn.MSELoss()(predictions, y)
         
         losses.append(loss.cpu().detach())
-        
-        # Backpropagate and update weights
-        loss.backward()   # compute the gradients using backpropagation
 
     losses = np.array(losses).mean()
 
