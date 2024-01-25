@@ -59,7 +59,7 @@ class ConvLSTMCell(nn.Module):
                 torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device))
 
 
-class ConvLSTM(nn.Module):
+class MultiStepConvLSTM(nn.Module):
 
     """
 
@@ -78,18 +78,11 @@ class ConvLSTM(nn.Module):
     Output:
         A tuple of two lists of length num_layers (or length 1 if return_all_layers is False).
             0 - layer_output_list is the list of lists of length T of each output
-            1 - last_state_list is the list of last states
-                    each element of the list is a tuple (h, c) for hidden state and memory
-    Example:
-        >> x = torch.rand((32, 10, 64, 128, 128))
-        >> convlstm = ConvLSTM(64, 16, 3, 1, True, True, False)
-        >> _, last_states = convlstm(x)
-        >> h = last_states[0][0]  # 0 for layer index, 0 for h index
     """
 
     def __init__(self, input_dim, output_dim, hidden_dim, kernel_size, num_layers,
                  batch_first=False, bias=True, return_all_layers=False):
-        super(ConvLSTM, self).__init__()
+        super(MultiStepConvLSTM, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
         self.hidden_number = copy.deepcopy(hidden_dim) # created to avoid confusion with hidden_dim in following line
@@ -136,13 +129,13 @@ class ConvLSTM(nn.Module):
 
         Returns
         -------
-        last_state_list, layer_output
+        layer_output
         """
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
             input_tensor = input_tensor.permute(1, 0, 2, 3, 4) 
 
-        b, _, _, h, w = input_tensor.size()
+        b, _, _, height, width = input_tensor.size()
 
         # Implement stateful ConvLSTM
         if hidden_state is not None:
@@ -150,7 +143,7 @@ class ConvLSTM(nn.Module):
         else:
             # Since the init is done in forward. Can send image size here
             hidden_state = self._init_hidden(batch_size=b,
-                                             image_size=(h, w))
+                                             image_size=(height, width))
 
         layer_output_list = []
         last_state_list = []
@@ -166,22 +159,21 @@ class ConvLSTM(nn.Module):
                 h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :], 
                                                  cur_state=[h, c])
                 output_inner.append(h)
-
+            
             layer_output = torch.stack(output_inner, dim=1)
             cur_layer_input = layer_output
-            layer_output_1kernel = self.conv2(layer_output[:,0]).unsqueeze(1) # 1x1 kernel to reduce from hidden dim to number of outputs
-            final_layer_output = F.relu(layer_output_1kernel) # non linear activation to prevent negative outputs
-
-            layer_output_list.append(final_layer_output)
+                
+            layer_output_list.append(layer_output)
             last_state_list.append([h, c])
 
         if not self.return_all_layers:
-            layer_output_list = layer_output_list[-1:]
-            last_state_list = last_state_list[-1:]
-#        if self.return_all_layers:
- #           layer_output_list = layer_output_list[1:]
-  #          last_state_list = last_state_list[1:]
-        return layer_output_list, last_state_list
+            layer_output_list = layer_output_list[-1:][0]
+            
+            final_layer_output = torch.zeros((b, seq_len, self.output_dim, height, width))
+            for t in range(seq_len):
+                final_layer_output[:, t] = F.relu(self.conv2(layer_output_list[:, t])) # 1x1 kernel to reduce from hidden dim to number of outputs
+
+        return final_layer_output
 
     def _init_hidden(self, batch_size, image_size):
         init_states = []

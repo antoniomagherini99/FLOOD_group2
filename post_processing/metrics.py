@@ -1,16 +1,5 @@
 import torch
-
-def obtain_predictions(model, input, device):
-    model_who = str(model.__class__.__name__)
-    if model_who == 'ConvLSTM':
-        sample_list, _ = model(input.unsqueeze(0).to(device))  # create a batch of 1?
-        predictions = torch.cat(sample_list, dim=1).detach().cpu()[0]  # remove batch
-    elif model_who == 'UNet':
-        predictions = model(input).to(device).detach().cpu()
-    else:
-        raise Exception('Need to check if statements to see if model is ' +
-                        'implemented correctly')
-    return predictions
+from models.ConvLSTM_model.train_eval import obtain_predictions
 
 def threshold_function(tensor):
      '''
@@ -51,7 +40,9 @@ def confusion_mat(dataset, model, device, sample = False, sample_num = 0):
             None
         input = dataset[samples][0]
         target = dataset[samples][1]
-        preds = obtain_predictions(model, input, device)
+        time_steps = target.shape[0]
+        
+        preds = obtain_predictions(model, input, device, time_steps)
         
         target_binary = threshold_function(target)
         pred_binary = threshold_function(preds)

@@ -2,11 +2,12 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
+#import torch
 import torch.nn as nn
 
+from models.ConvLSTM_model.train_eval import obtain_predictions
+from post_processing.metrics import confusion_mat
 from pre_processing.normalization import *
-from post_processing.metrics import confusion_mat, obtain_predictions
 
 def plot_losses(train_losses, validation_losses, model):
     '''
@@ -66,7 +67,8 @@ def plot_test_loss(dataset, model, train_val, device):
     
     for sample in range(num_samples):
         target = dataset[sample][1]
-        preds = obtain_predictions(model, dataset[sample][0], device)
+        time_steps = target.shape[0]
+        preds = obtain_predictions(model, dataset[sample][0], device, time_steps)
         
         loss_sample[sample] = nn.MSELoss()(preds, target)
     
