@@ -29,7 +29,6 @@ def encode_into_csv(inputs, targets, train_val_test):
     df_inputs = pd.DataFrame(flattened_tensor1.numpy())
     df_targets = pd.DataFrame(flattened_tensor2.numpy())
 
-    
     dir_path = retrieve_path(train_val_test)
     
     # Save the DataFrame to a CSV file
@@ -67,7 +66,8 @@ def decode_from_csv(train_val_test):
             for water depth for all files in a dataset.
             Shape is 4 x pixel_square x pixel_square
         targets: contains water depth and discharge for all files in a dataset.
-            Shape is time_steps (96) x 2 x pixel_square x pixel_square
+            Shape is time_steps (96) x 2 x pixel_square (64) x pixel_square for training and validation dataset, dataset 1, dataset 2
+                                (241) x 2 x pixel_square (128) x pixel_square for dataset 3
     """
     dir_path = retrieve_path(train_val_test)
     
@@ -100,7 +100,11 @@ def decode_from_csv(train_val_test):
             None
     pixel_square = count_pixels(train_val_test)
     shape_inputs = (count, 3, pixel_square, pixel_square)
-    shape_targets = (count, 97, 2, pixel_square, pixel_square) # 97 !!! not true for dataset 3
+    
+    if train_val_test == 'test3':
+        shape_targets = (count, 241, 2, pixel_square, pixel_square) # hardcoded, check later if there's time for improvement
+    else:
+        shape_targets = (count, 97, 2, pixel_square, pixel_square)
 
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
@@ -114,7 +118,6 @@ def decode_from_csv(train_val_test):
     inputs = torch.cat((inputs, boundary), dim = 2)
     
     dataset = TensorDataset(inputs.float(), targets.float())
-    
     
     # Print the shapes of the restored tensors
     print("Restored inputs Shape:", inputs.shape)
