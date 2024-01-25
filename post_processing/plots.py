@@ -94,8 +94,14 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, model, device
     '''
     
     # get inputs and outputs
-    input = dataset[:][0]
-    target = dataset[:][1]
+    # input = dataset[:][0]
+    # target = dataset[:][1]
+    
+    inputs = []
+    targets = []
+    for i in range(len(dataset)):
+        inputs[i] = dataset[i][0]
+        targets[i] = dataset[i][1]
     # boundary_condition = input[0, 3]
 
     # denormalize dataset

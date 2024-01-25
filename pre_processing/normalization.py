@@ -42,6 +42,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
     normalized_dataset = []
     for idx in range(len(dataset)):
         norm_x = torch.FloatTensor(scaler_x.transform(dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels)))
+        
         norm_wd = torch.FloatTensor(scaler_wd.transform(dataset[idx][1][:, 0].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
         norm_q = torch.FloatTensor(scaler_q.transform(dataset[idx][1][:, 1].reshape(1, -1).T).reshape(len_time, 1, pixels, pixels))
         
