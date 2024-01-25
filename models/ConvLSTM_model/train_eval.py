@@ -30,7 +30,7 @@ def obtain_predictions(model, input, device, steps = 0):
 
     '''
     model_who = str(model.__class__.__name__)
-    if model_who == 'ConvLstm' or model_who == 'MultiStepConvLSTM':
+    if model_who == 'ConvLSTM' or model_who == 'MultiStepConvLSTM':
         if len(input.shape) == 4: # no batch
             input = input.unsqueeze(0) # create a batch of 1, model requires it to run
             unbatch = True
