@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import random
 import pandas as pd
 import os
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 import torch
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
@@ -24,33 +26,62 @@ class MultiFixedRotation:
 
 fixed_angles = [0, 90, 180, 270]
 
-def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True): #angles=fixed_angles, 
+def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True):
     '''
-    Function for implementing data augmentation of inputs (DEM, X- and Y-Slope, 
-    Water Depth and Discharge).
+    Function for implementing data augmentation of inputs (DEM, X- and Y-Slope,
+    Water Depth, and Discharge).
 
     Input: train_dataset = torch tensor, dataset with input variables
            p_hflip, p_vflip = float, probability of horizontal and vertical flipping
                               default = 0.5 for both
            angles = angle degrees for dataset rotation, fixed at 0°, 90°, 180°, 270°
-    Output:  
+    Output:
     '''
-    # implement transformation pipeline with horizontal and vertical flip and rotation of fixed angles
+    
+    # Define the transformation pipeline with horizontal and vertical flip
     transformation_pipeline = transforms.Compose([
-    transforms.RandomHorizontalFlip(p=p_hflip),
-    transforms.RandomVerticalFlip(p=p_vflip)]) 
-    #transforms.functional.rotate(train_dataset[i] for i in range(len(train_dataset)), RandomFixedRotation(angles))
+        transforms.RandomHorizontalFlip(p=p_hflip),
+        transforms.RandomVerticalFlip(p=p_vflip)])
+     #transforms.functional.rotate(train_dataset[i] for i in range(len(train_dataset)), RandomFixedRotation(angles))
+    
+    inputs = []
+    outputs = []
 
-    # transform dataset
-    transformed_dataset = [transformation_pipeline(train_dataset) for _ in range(range_t)]
-    full_dataset = list(torch.utils.data.ConcatDataset([train_dataset, transformed_dataset], ))
-    # full_dataset = torch.cat([train_dataset, transformed_dataset], dim=0)
+    transformed_inputs = []
+    transformed_outputs = []
+
+    for idx in range(len(train_dataset)):
+        inputs.append(train_dataset[idx][0])
+        outputs.append(train_dataset[idx][1]) 
+        
+        transformed_inputs.append(transformation_pipeline(train_dataset[idx][0]))
+        transformed_outputs.append(transformation_pipeline(train_dataset[idx][1]))   
+
+    # Assuming transformed_inputs and transformed_outputs are lists of tensors
+    inputs_stack = torch.stack(inputs)
+    outputs_stack = torch.stack(outputs)
+
+    transformed_inputs = [torch.tensor(arr) for arr in transformed_inputs]
+    transformed_outputs = [torch.tensor(arr) for arr in transformed_outputs]
+
+    # Now, use torch.stack to concatenate the tensors along a new dimension
+    transformed_inputs = torch.stack(transformed_inputs)
+    transformed_outputs = torch.stack(transformed_outputs)
+
+    all_inputs = torch.cat([inputs_stack, transformed_inputs])
+    all_outputs = torch.cat([outputs_stack, transformed_outputs])
+
+    # Now, create TensorDataset
+    transformed_dataset = torch.utils.data.TensorDataset(all_inputs, all_outputs)
+    print(f'The samples in the dataset before augmentation were {len(train_dataset)}\n\
+The samples in the dataset after augmentation are {len(transformed_dataset)}')
     
-    #plot([orig_img] + transformed_dataset)
-    # print(type(train_dataset))
-    # print(type(full_dataset))
-    
-    return full_dataset if full==True else transformed_dataset
+    if full==False:
+        transformed_dataset = torch.utils.data.TensorDataset(transformed_inputs, transformed_outputs)
+        print(f'Be careful! You are not including the transformed dataset into the original one!\n\
+The samples in the dataset before augmentation were {len(train_dataset)}\n\
+The samples in the dataset after augmentation are {len(transformed_dataset)} ')
+    return transformed_dataset 
 
 # def plot(dataset, row_title=None, **imshow_kwargs):
 #     """Plooting function taken from https://raw.githubusercontent.com/pytorch/vision/main/gallery/transforms/helpers.py"""
