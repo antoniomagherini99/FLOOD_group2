@@ -14,36 +14,44 @@ from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 from torchvision.transforms import v2 as transforms
 from torchvision.transforms.v2 import functional as F
 
-class MultiFixedRotation:
-    def __init__(self, fixed_angles):
-        self.angles = fixed_angles
-
-    def __call__(self):
-        angle = random.choice(self.angles)
-        return angle
-
 # List of fixed rotation angles (in degrees)
-
 fixed_angles = [0, 90, 180, 270]
 
-def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True):
+class MultiFixedRotation:
+    '''
+    Class that implements random rotations of the dataset at fixed angles
+    '''
+    def __init__(self, angles):
+        self.angles = angles
+
+    def __call__(self, x):
+        angle = random.choice(self.angles)
+        return transforms.functional.rotate(x, angle)
+
+def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     '''
     Function for implementing data augmentation of inputs (DEM, X- and Y-Slope,
     Water Depth, and Discharge).
 
     Input: train_dataset = torch tensor, dataset with input variables
-           p_hflip, p_vflip = float, probability of horizontal and vertical flipping
-                              default = 0.5 for both
-           angles = angle degrees for dataset rotation, fixed at 0°, 90°, 180°, 270°
-    Output:
+           angles = list of angle degrees for random rotation of the dataset, 
+                    default values are 90°, 180°, 270°
+           p_hflip = float, probability of horizontal flipping
+                     default = 0.5 
+           
+    Output: transformed_dataset = new dataset with augmented data,
+                                  if full = True returns the original and trasformed dataset concatenated together
+                                  if full = False returns only the trasformed dataset 
     '''
     
-    # Define the transformation pipeline with horizontal and vertical flip
+    # transformation pipeline with horizontal flip
     transformation_pipeline = transforms.Compose([
-        transforms.RandomHorizontalFlip(p=p_hflip),
-        transforms.RandomVerticalFlip(p=p_vflip)])
-     #transforms.functional.rotate(train_dataset[i] for i in range(len(train_dataset)), RandomFixedRotation(angles))
+        transforms.RandomHorizontalFlip(p=p_hflip)])
     
+    # rotation with MultiFixedRotation class
+    multi_fixed_rotation = MultiFixedRotation(angles)
+    
+    # initialize lists needed for looping
     inputs = []
     outputs = []
 
@@ -54,35 +62,42 @@ def augmentation(train_dataset, range_t, p_hflip=0.5, p_vflip=0.5, full=True):
         inputs.append(train_dataset[idx][0])
         outputs.append(train_dataset[idx][1]) 
         
-        transformed_inputs.append(transformation_pipeline(train_dataset[idx][0]))
-        transformed_outputs.append(transformation_pipeline(train_dataset[idx][1]))   
+        # apply augmentation (flipping + rotation)
+        transformed_inputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][0])))
+        transformed_outputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][1])))   
 
-    # Assuming transformed_inputs and transformed_outputs are lists of tensors
+    # stack lists
     inputs_stack = torch.stack(inputs)
     outputs_stack = torch.stack(outputs)
 
     transformed_inputs = [torch.tensor(arr) for arr in transformed_inputs]
     transformed_outputs = [torch.tensor(arr) for arr in transformed_outputs]
 
-    # Now, use torch.stack to concatenate the tensors along a new dimension
     transformed_inputs = torch.stack(transformed_inputs)
     transformed_outputs = torch.stack(transformed_outputs)
 
+    # concatenate tensors
     all_inputs = torch.cat([inputs_stack, transformed_inputs])
     all_outputs = torch.cat([outputs_stack, transformed_outputs])
 
-    # Now, create TensorDataset
     transformed_dataset = torch.utils.data.TensorDataset(all_inputs, all_outputs)
-    print(f'The samples in the dataset before augmentation were {len(train_dataset)}\n\
+    
+    if full==True:
+        print(f'The samples in the dataset before augmentation were {len(train_dataset)}\n\
 The samples in the dataset after augmentation are {len(transformed_dataset)}')
     
     if full==False:
         transformed_dataset = torch.utils.data.TensorDataset(transformed_inputs, transformed_outputs)
-        print(f'Be careful! You are not including the transformed dataset into the original one!\n\
+        warning_msg = (
+f'\nBe careful, you are not including the transformed dataset into the original one!\n\
 The samples in the dataset before augmentation were {len(train_dataset)}\n\
-The samples in the dataset after augmentation are {len(transformed_dataset)} ')
-    return transformed_dataset 
+The samples in the dataset after augmentation are {len(transformed_dataset)}\n\
+You are now using only the transformed dataset.'
+)
+        warnings.warn(warning_msg, RuntimeWarning)
+    return transformed_dataset
 
+    
 # def plot(dataset, row_title=None, **imshow_kwargs):
 #     """Plooting function taken from https://raw.githubusercontent.com/pytorch/vision/main/gallery/transforms/helpers.py"""
 #     if not isinstance(imgs[0], list):
