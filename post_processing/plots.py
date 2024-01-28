@@ -94,76 +94,143 @@ def plot_sorted(dataset, train_val, scaler_x, scaler_wd, scaler_q, model, device
                                             with the scaler function 
     Output: None (plot)
     '''
-    
+
     # get inputs and outputs
-    # input = dataset[:][0]
-    # target = dataset[:][1]
+    # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
     
+    n_samples = len(dataset)
+    n_features = dataset[0][1].shape[1]
+    n_pixels = dataset[0][1].shape[-1]
+    time_steps = dataset[0][1].shape[0]
+
+    # print(f'Samples: {n_samples}')
+    # print(f'Features: {n_features}')
+    # print(f'Pixels: {n_pixels}')
+    # print(f'Time steps: {time_steps}\n')
+    
+    # initialize inputs and outputs
     inputs = []
     targets = []
-    for i in range(len(dataset)):
-        inputs[i] = dataset[i][0]
-        targets[i] = dataset[i][1]
-    # boundary_condition = input[0, 3]
+    
+    for i in range(n_samples):
+        inputs.append(dataset[i][0])
+        targets.append(dataset[i][1])
 
-    # denormalize dataset
-    elevation, water_depth, discharge = denormalize_dataset(input, target, train_val, 
+    # print(f'Inputs shape: {np.shape(inputs[0])}, targets shape: {np.shape(targets[0])}')
+    # print(f'Input type: {type(inputs)}\n')
+
+    # initialize denormalization of dataset
+    elevation = np.zeros((n_samples, n_pixels, n_pixels))
+    water_depth = np.zeros((n_samples, time_steps, n_pixels, n_pixels))
+    discharge = np.zeros((n_samples, time_steps, n_pixels, n_pixels))
+
+    # initialize losses
+    losses = torch.zeros((n_samples, n_features))
+
+    for i in range(n_samples):
+        # denormalize dataset
+        elevation[i], water_depth[i], discharge[i] = denormalize_dataset(inputs[i], targets[i], train_val, 
                                                             scaler_x, scaler_wd, scaler_q)
+        # make predictions
+        preds = obtain_predictions(model, inputs[i], device)
     
-    # Compute losses uses MSELoss
-    # model_who = str(model.__class__.__name__)
-    preds = obtain_predictions(model, input, device)
+    # print(f'Elevation {elevation}, shape: {elevation.shape}, type: {type(elevation)}')
+    # print(f'water_depth shape: {water_depth.shape}, type: {type(water_depth)}')
+    # print(f'discharge shape: {discharge.shape}, type: {type(discharge)}')
+    # print(f'predictions shape: {preds.shape}, type: {type(preds)}')
+    # print(f'predictions wd shape: {preds[:,0].shape}, type: {type(preds[:,0])}')
+    # print(f'predictions q shape: {preds[:,0].shape}, type: {type(preds[:,0])}\n')
 
-    features = target.shape[1]
-    time_steps = target.shape[0]
-    losses = np.zeros((features, time_steps)) # initialize empty array
-    time_step_array = np.arange(1, time_steps + 1)
-
-    for step in range(time_steps):
-        for feature in range(features):
-            losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
+    # compute MSE losses
+    for feature in range(n_features):
+            for i in range(n_samples):
+                 losses[i, feature] = nn.MSELoss()(preds[:][feature], targets[i][:][feature])
+    # print(f'losses shape: {losses.shape}, type: {type(losses)}\n')
     
-    # compute average loss for sorting dataset
-    avg_loss = np.mean(losses[0, :], losses[1, :])
+    # average over columns = features
+    avg_loss = torch.mean(losses, dim=1) 
+    # print(f'Avg loss shape: {avg_loss.shape}, type:{type(avg_loss)}\n')
 
-    # compute recall
+    # compute recall - improvement: add minimium threshold for recall (wd > 10 cm), need to denormalize targets and predictions
+    # ask scaler what 10 is and plot that scaler_wd.transform(0.10) - check
+    
     recall, _, _ = confusion_mat(dataset, model, device)
+    # print(f'recall: {recall}, shape: {recall.shape}\n')
 
     # sorting dataset
-    elevation_sorted = sorted(elevation, avg_loss)
-    sorted_indexes = [index for index, _ in elevation_sorted]
-    wd_sorted, q_sorted = [water_depth[i] for i in sorted_indexes], [discharge[i] for i in sorted_indexes]
-    sorted_recall = [recall[i] for i in sorted_indexes]
+    _, sorted_indexes = torch.sort(avg_loss)
+    
+    sorted_l_wd = [losses[i,0] for i in sorted_indexes]
+    sorted_l_q = [losses[i,1] for i in sorted_indexes]
 
-    elevation_var = np.std(elevation_sorted)
+    # sorted_loss = []
+    # for i in range(n_samples):
+    #      for j in range(n_features):
+    #           sorted_loss[i, j] = sorted_indexes[i]
+    # print(f'sorted_indexes: {sorted_indexes},\n\
+# sorted_loss wd: {sorted_l_wd},\n\sorted_loss q: {sorted_l_q}')
+    # print(f'sorted_indexes shape: {sorted_indexes.shape}, sorted_loss wd shape: {sorted_l_wd.shape}, sorted_loss q shape: {sorted_l_q.shape}\n')
+
+    elevation_sorted = [elevation[i] for i in sorted_indexes]
+    elev_sorted_tensor = torch.Tensor(elevation_sorted)
+    # print(len(elevation_sorted[:][:][:]))
+    # print(elevation_sorted[:][:][:])
+    # print(f'Elevation sorted shape: {elevation_sorted.shape}, type: {type(elevation_sorted)}')
+    # print(f'Check if they are the same {elevation==elevation_sorted}')
+    
+    # compute mean over x- and y-direction 
+    mean_elev = torch.mean(elev_sorted_tensor, dim=(1,2))
+    # compute variation
+    var_elev = elev_sorted_tensor - mean_elev[:, np.newaxis, np.newaxis]
+    
+    # not needed actually
+    # wd_sorted = [water_depth[i] for i in sorted_indexes]
+    # q_sorted  = [discharge[i] for i in sorted_indexes]   
+    # print(f'wd_sorted shape: {wd_sorted.shape}, type: {type(wd_sorted)}')
+    # print(f'Check if they are the same {water_depth==wd_sorted}\n')
+    # print(f'wd_sorted shape: {q_sorted.shape}, type: {type(q_sorted)}')
+    # print(f'Check if they are the same {discharge==q_sorted}\ng')
+    
+    sorted_recall = [recall[i] for i in sorted_indexes] 
+    # print(f'sorted_recall shape: {sorted_recall.shape}, type: {type(sorted_recall)}')
+    # print(f'Check if they are the same {recall==sorted_recall}\n')
     
     # plot 
-    fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)
-    fig.subplots_adjust(wspace=0.5)
+    fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True) 
+    plt.subplots_adjust(hspace=0.5)
 
     # create second y-axis for discharge scale
     ax1_2 = axes[1].twinx()
+    
+    # is this working? weird that loss does not seem to be sorted
+    axes[0].boxplot(elev_sorted_tensor.reshape(128, -1), showfliers=False)  #(var_elev.reshape(128, -1), showfliers=False) 
+    axes[1].scatter(sorted_indexes, sorted_l_wd, color='blue', marker='x', label='water depth') 
+    ax1_2.scatter(sorted_indexes, sorted_l_q, color='red', marker='x', label='discharge') 
+    axes[2].scatter(sorted_indexes, sorted_recall, color='green', marker='x', label='recall') 
 
-    axes[0].boxplot(sorted_indexes, elevation_var, label='DEM')
-    axes[1].plot(sorted_indexes, wd_sorted, color='blue', label='water depth')
-    ax1_2.plot(sorted_indexes, q_sorted, color='red', label='discharge')
-    axes[2].scatter(sorted_indexes, sorted_recall, color='green', label='recall')
-
+    labels = np.array([sorted_indexes[i] for i in sorted_indexes])
+    
     for ax in axes:
         ax.set_xlabel('Sample ID')
-    
-    axes[0].set_ylabel('Normalized variation [-]')
+        ax.set_xticks(sorted_indexes, labels, rotation=45, ha='right')
+        ax.legend()
+
+    axes[0].legend(['DEM'])
+    ax1_2.legend(['discharge']) # need to find a way to have both variables together, leave for the moment
+     
+    axes[0].set_ylabel('Normalized average elevation [-]')
     axes[1].set_ylabel('Normalized Water Depth loss [-]')
     ax1_2.set_ylabel('Normalized Discharge loss [-]')
     axes[2].set_ylabel('Recall [-]')
 
-    axes[0].set_title('Normalized DEM variation [-]')
+    axes[0].set_title('Normalized DEM elevation and variation [-]')
     axes[1].set_title('Normalized MSE loss [-]')
     axes[2].set_title('Recall [-]')
 
+    fig.suptitle('Sorting based on increasing average loss', fontsize=15)
+    plt.xlim(-1, n_samples+1)
     plt.legend()
     plt.show()
-
     return None
 
 def plot_metrics(dataset, model, train_val, device):
