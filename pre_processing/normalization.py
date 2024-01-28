@@ -21,7 +21,6 @@ def scaler(train_dataset, scaler_x=MinMaxScaler(), scaler_wd=MinMaxScaler(), sca
         scaler_x.partial_fit(train_dataset[idx][0].reshape(train_dataset[0][0].shape[1], -1).T.cpu())
         scaler_wd.partial_fit(train_dataset[idx][1][:, 0].reshape(-1, 1).cpu())
         scaler_q.partial_fit(train_dataset[idx][1][:, 1].reshape(-1, 1).cpu())
-
     
     return scaler_x, scaler_wd, scaler_q
 
@@ -32,13 +31,14 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
     Inputs: dataset = dataset to be normalized
             scaler_x, scaler_wd, scaler_q = scalers for inputs and targets (water depth and discharge), created 
                                             with the scaler function
-            train_val = str, 
+            train_val = str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
 
     Outputs: normalized_dataset = dataset after normalization 
     '''
     len_time = dataset[0][1].shape[0]
     pixels = count_pixels(train_val)
     input_features = dataset[0][0].shape[1]
+    
     normalized_dataset = []
     for idx in range(len(dataset)):
         norm_x = torch.FloatTensor(scaler_x.transform(dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels)))
@@ -48,6 +48,7 @@ def normalize_dataset(dataset, scaler_x, scaler_wd, scaler_q, train_val):
         
         norm_y = torch.cat((norm_wd, norm_q), dim = 1)
         normalized_dataset.append((norm_x, norm_y))
+    
     return normalized_dataset
 
 def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_wd, scaler_q):
