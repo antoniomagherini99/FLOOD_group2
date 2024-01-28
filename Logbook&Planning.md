@@ -213,3 +213,11 @@ Everyone: PP presentation, report, other to be discussed.
 2. Removed pottential conflicts so that all functions could work regardless of model used
 - Antonio (8h)
 1. Worked on feedback recieved during yesterday's session
+
+26/1/24
+- Antonio (8h)
+1. ...
+
+28/1/24
+- Lucas (1h)
+1. Debugged denormalization function and removed hardcoding in encode/decode csv py file

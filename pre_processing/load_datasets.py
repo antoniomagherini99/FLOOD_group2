@@ -55,12 +55,9 @@ def count_pixels(train_val_test):
     """
     dir_path = retrieve_path(train_val_test)
     
-    folder_path = dir_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
-    for path in os.listdir(folder_path):
-        file_number = re.search(r'\d{1,5}', path)
-        break # all files in a folder have the same number of pixels
+    folder_path = dir_path + 'DEM/' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
     
-    file_path = folder_path + f'/DEM_{int(file_number.group())}.txt'
+    file_path = folder_path + str(os.listdir(folder_path)[0]) # first file in folder
     
     elevation_data = np.loadtxt(file_path)
 
