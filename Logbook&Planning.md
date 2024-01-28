@@ -194,5 +194,30 @@ Everyone: PP presentation, report, other to be discussed.
 23/1/24
 - Lucas (2h)
 1. Started implementing more metrics to test the ability of each model
-- Antonio (2h)
+- Antonio (3h)
 1. Started implementing data augmentation to reduce the loss of dataset 2. Rotation and flipping were considered. The ease of flipping makes it attractive.
+
+24/1/24
+- Lucas (5 h)
+1. Finished implementing metrics
+2. Worked on making convlstm model only work with a single layer instead of 48
+- Antonio (6 h) 
+1. Worked on data augmentation
+2. Started working on post processing plots to show in which situation the model works better
+- Lucas And Antonio (2h)
+1. Attended feedback session, realised there were mistakes in loading datasets, standardisation and convlstm model implementation
+
+25/1/24
+- Lucas (3.5 h)
+1. Succesffuling implemented single layer convlstm model
+2. Removed pottential conflicts so that all functions could work regardless of model used
+- Antonio (8h)
+1. Worked on feedback recieved during yesterday's session
+
+26/1/24
+- Antonio (8h)
+1. ...
+
+28/1/24
+- Lucas (1h)
+1. Debugged denormalization function and removed hardcoding in encode/decode csv py file

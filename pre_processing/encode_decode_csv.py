@@ -3,7 +3,7 @@
 import pandas as pd
 import torch
 import os
-import re
+import numpy as np
 from torch.utils.data import TensorDataset
 
 from pre_processing.load_datasets import retrieve_path, count_pixels
@@ -92,19 +92,24 @@ def decode_from_csv(train_val_test):
 
     # Automatic way to know how many samples are in a given dataset folder
     count = 0
-    dir_path = retrieve_path(train_val_test) + 'DEM/' # Arbitrary choice as DEM, VX, VY and WD all have the same number of samples
+    dir_path = retrieve_path(train_val_test) + 'WD/' # Arbitrary choice as DEM, VX, VY and WD all have the same number of samples
     for path in os.listdir(dir_path):
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
         else:
             None
+       
+    # used to count timesteps
+    wd_file = dir_path + str(os.listdir(dir_path)[0]) # first file in folder
+    time_steps = np.loadtxt(wd_file).shape[0]
+    
     pixel_square = count_pixels(train_val_test)
     shape_inputs = (count, 3, pixel_square, pixel_square)
     
     if train_val_test == 'test3':
-        shape_targets = (count, 241, 2, pixel_square, pixel_square) # hardcoded, check later if there's time for improvement
+        shape_targets = (count, time_steps, 2, pixel_square, pixel_square)
     else:
-        shape_targets = (count, 97, 2, pixel_square, pixel_square)
+        shape_targets = (count, time_steps, 2, pixel_square, pixel_square)
 
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
