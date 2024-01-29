@@ -21,7 +21,7 @@ class MultiFixedRotation:
     '''
     Class that implements random rotations of the dataset at fixed angles
     '''
-    def __init__(self, angles, seed):
+    def __init__(self, angles):
         self.angles = angles
 
     def __call__(self, x, seed):
