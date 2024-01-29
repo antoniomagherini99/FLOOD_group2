@@ -101,8 +101,8 @@ def decode_from_csv(train_val_test):
     pixel_square = count_pixels(train_val_test)
     
     #calculate number of fetures in inputs and targets given length of dataset:
-    input_features = int(len(df_inputs.values) / (count * pixel_square ** 2))
-    target_features = int(len(df_targets.values) / (count * time_steps * pixel_square ** 2))
+    input_features = int(len(restored_inputs) / (count * pixel_square ** 2))
+    target_features = int(len(restored_targets) / (count * time_steps * pixel_square ** 2))
     
     shape_inputs = (count, input_features, pixel_square, pixel_square)
     shape_targets = (count, time_steps, target_features, pixel_square, pixel_square)
