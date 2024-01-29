@@ -21,21 +21,24 @@ class MultiFixedRotation:
     '''
     Class that implements random rotations of the dataset at fixed angles
     '''
-    def __init__(self, angles):
+    def __init__(self, angles, seed):
         self.angles = angles
 
-    def __call__(self, x):
-        angle = random.choice(self.angles)
+    def __call__(self, x, seed):
+        random.seed(seed)
+        angle = random.choice(self.angles, seed)
         return transforms.functional.rotate(x, angle)
 
-def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
+def augmentation(train_dataset, seed=42, angles=[90,180,270], p_hflip=0.5, full=True):
     '''
     Function for implementing data augmentation of inputs (DEM, X- and Y-Slope,
     Water Depth, and Discharge).
 
     Input: train_dataset = torch tensor, dataset with input variables
+           seed = int, number for keeping the same random choice for trasforming both inputs and outputs in the same way, 
+                  default = 42 
            angles = list of angle degrees for random rotation of the dataset, 
-                    default values are 90°, 180°, 270°
+                    default = 90°, 180°, 270°
            p_hflip = float, probability of horizontal flipping
                      default = 0.5 
            
@@ -49,7 +52,7 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
         transforms.RandomHorizontalFlip(p=p_hflip)])
     
     # rotation with MultiFixedRotation class
-    multi_fixed_rotation = MultiFixedRotation(angles)
+    multi_fixed_rotation = MultiFixedRotation(angles, seed)
     
     # initialize lists needed for looping
     inputs = []
@@ -65,6 +68,8 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
         # apply augmentation (flipping + rotation)
         transformed_inputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][0])))
         transformed_outputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][1])))   
+
+    # transformed_dataset = multi_fixed_rotation(transformation_pipeline(train_dataset))
 
     # stack lists
     inputs_stack = torch.stack(inputs)
