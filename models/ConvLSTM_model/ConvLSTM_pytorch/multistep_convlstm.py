@@ -164,7 +164,7 @@ class MultiStepConvLSTM(nn.Module):
             cur_layer_input = layer_output
                 
             layer_output_list.append(layer_output)
-            last_state_list.append([h, c])
+            # last_state_list.append([h, c])
 
         if not self.return_all_layers:
             layer_output_list = layer_output_list[-1:][0]
