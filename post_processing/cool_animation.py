@@ -214,8 +214,9 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     model_who = str(model.__class__.__name__)
     preds = obtain_predictions(model, input, device, time_steps)
         
-    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q)
-
+    # _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q)
+    wd_pred = preds[:,0]
+    q_pred = preds[:,1]
 
     # Creating subplots
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(
