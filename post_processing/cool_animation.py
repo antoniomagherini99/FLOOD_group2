@@ -153,7 +153,7 @@ def animated_plot(figure, animated_tensor, axis,
 
 
 def plot_animation(sample, dataset, model, train_val, scaler_x,
-                   scaler_wd, scaler_q, device='cuda', save=False):
+                   scaler_y, device='cuda', save=False):
     '''
     Plot animation to visualize the evolution of certain variables over time.
     Assumes that the model can output water depth and discharge.
@@ -176,10 +176,8 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
         Used in the title of the animation.
     scaler_x : instance of normalizer
         Used on inputs.
-    scaler_wd : instance of normalizer
-        Used on the water depth targets.
-    scaler_q : instance of normalizer
-        Used on the discharge target.
+    scaler_y : instance of normalizer
+        Used on the targets/outputs
     device : str
         Device on which to perform the computations; 'cuda' is the default.
     save : bool
@@ -209,14 +207,12 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
-        input, target, train_val, scaler_x, scaler_wd, scaler_q)
+        input, target, train_val, scaler_x, scaler_y)
     
     model_who = str(model.__class__.__name__)
     preds = obtain_predictions(model, input, device, time_steps)
         
-    # _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_wd, scaler_q)
-    wd_pred = preds[:,0]
-    q_pred = preds[:,1]
+    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_y)
 
     # Creating subplots
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(

@@ -6,6 +6,8 @@ def threshold_function(tensor):
      Use a tensor to return a binary tensor which has ones at non zero elements
      and zeros at zero elements
      '''
+     ## Too lazy to implement scaler_y in all functions.
+     ## Needed if we want to include a threshold which is non zero.
      return torch.where(tensor > 0, torch.tensor(1), torch.tensor(0))
 
 def binary_recall(pred_binary, target_binary):
