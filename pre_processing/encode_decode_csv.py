@@ -83,33 +83,29 @@ def decode_from_csv(train_val_test):
 
         df_targets = pd.concat([df_targets1, df_targets2, 
                                 df_targets3, df_targets4], axis=0) 
-    else:
+    else: # test 1 is small enough
         df_targets = pd.read_csv(dir_path + train_val_test + '_tar.csv')
 
     # Convert the DataFrame to a PyTorch tensor
     restored_inputs = torch.tensor(df_inputs.values)
     restored_targets = torch.tensor(df_targets.values)
 
-    # Automatic way to know how many samples are in a given dataset folder
-    count = 0
-    dir_path = retrieve_path(train_val_test) + 'WD/' # Arbitrary choice as DEM, VX, VY and WD all have the same number of samples
-    for path in os.listdir(dir_path):
-        if os.path.isfile(os.path.join(dir_path, path)):
-            count += 1
-        else:
-            None
+    # Use of WD, as all want to know how many time steps are in dataset
+    dir_path = retrieve_path(train_val_test) + 'WD/'
+    count = len(os.listdir(dir_path))
        
     # used to count timesteps
     wd_file = dir_path + str(os.listdir(dir_path)[0]) # first file in folder
     time_steps = np.loadtxt(wd_file).shape[0]
     
     pixel_square = count_pixels(train_val_test)
-    shape_inputs = (count, 3, pixel_square, pixel_square)
     
-    if train_val_test == 'test3':
-        shape_targets = (count, time_steps, 2, pixel_square, pixel_square)
-    else:
-        shape_targets = (count, time_steps, 2, pixel_square, pixel_square)
+    #calculate number of fetures in inputs and targets given length of dataset:
+    input_features = int(len(df_inputs.values) / (count * pixel_square ** 2))
+    target_features = int(len(df_targets.values) / (count * time_steps * pixel_square ** 2))
+    
+    shape_inputs = (count, input_features, pixel_square, pixel_square)
+    shape_targets = (count, time_steps, target_features, pixel_square, pixel_square)
 
     # Split the restored tensor into two tensors based on the original shapes
     inputs = torch.reshape(restored_inputs, shape_inputs)
