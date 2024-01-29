@@ -64,19 +64,6 @@ def count_pixels(train_val_test):
     tot_pixels = len(elevation_data[:, 2])
     pixel_square = int(np.sqrt(tot_pixels)) # Image is always a square
     return pixel_square
-    
-
-# ------------- #
-
-# The following lines create variables to more easily specify what we use the model for 
-# (i.e., train and validate, test with dataset 1 and so on) in the following functions.
-
-train_val = 'train_val'
-test1 = 'test1'
-test2 = 'test2'
-test3 = 'test3'
-
-# ------------- #
 
 # @njit
 def process_elevation_data(file_id, train_val_test='train_val', pixel_square = 64):
