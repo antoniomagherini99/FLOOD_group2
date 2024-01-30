@@ -90,9 +90,9 @@ Outputs sizes: {outputs_sizes}\n')
     transformed_concat = fixed_rotation(transformation_pipeline(concat))
 
     # reshape the tensors to original dimensions
-    transformed_inputs = transformed_concat[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
+    transformed_inputs = rotate_concat[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
                                                                             inputs_sizes[1], inputs_sizes[2], inputs_sizes[3]) 
-    transformed_outputs = transformed_concat[:, inputs_flat_dim:, :, :].view(n_samples, outputs_sizes[0], 
+    transformed_outputs = rotate_concat[:, inputs_flat_dim:, :, :].view(n_samples, outputs_sizes[0], 
                                                                             outputs_sizes[1], outputs_sizes[2], outputs_sizes[3])
 
     # concatenate tensors
