@@ -61,19 +61,14 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     inputs = []
     outputs = []
 
-    transformed_inputs = []
-    transformed_outputs = []
-
     for idx in range(len(train_dataset)):
-        
         inputs.append(train_dataset[idx][0])
         outputs.append(train_dataset[idx][1])
 
     # get sizes of each dimension
     inputs_sizes = train_dataset[0][0].shape
     outputs_sizes = train_dataset[0][1].shape
-    print(f'Inputs sizes: {inputs_sizes},\n\
-Outputs sizes: {outputs_sizes}\n')
+    print(f'Inputs sizes: {inputs_sizes},\n\Outputs sizes: {outputs_sizes}\n')
 
     # stack lists
     inputs_tensor = torch.stack(inputs)
@@ -87,7 +82,8 @@ Outputs sizes: {outputs_sizes}\n')
     flattened_outputs = outputs_tensor.flatten(1,2)
     concat = torch.cat([flattened_inputs, flattened_outputs], dim=1)
 
-    transformed_concat = fixed_rotation(transformation_pipeline(concat))
+    transformed_concat = transformation_pipeline(concat)
+    rotate_concat  =fixed_rotation([i for i in transformed_concat])
 
     # reshape the tensors to original dimensions
     transformed_inputs = rotate_concat[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
