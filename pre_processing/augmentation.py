@@ -87,7 +87,8 @@ Outputs sizes: {outputs_sizes}\n')
     flattened_outputs = outputs_tensor.flatten(1,2)
     concat = torch.cat([flattened_inputs, flattened_outputs], dim=1)
 
-    transformed_concat = fixed_rotation(transformation_pipeline(concat))
+    transformed_concat = transformation_pipeline(concat)
+    rotate_concat  = fixed_rotation([i for i in transformed_concat])
 
     # reshape the tensors to original dimensions
     transformed_inputs = transformed_concat[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
