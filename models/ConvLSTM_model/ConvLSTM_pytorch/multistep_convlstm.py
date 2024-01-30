@@ -150,7 +150,8 @@ class MultiStepConvLSTM(nn.Module):
 
         seq_len = input_tensor.size(1)
         cur_layer_input = input_tensor
-
+        
+        layer_count = 0
         for layer_idx in range(self.num_layers):
 
             h, c = hidden_state[layer_idx]
@@ -161,13 +162,19 @@ class MultiStepConvLSTM(nn.Module):
                 output_inner.append(h)
             
             layer_output = torch.stack(output_inner, dim=1)
-            cur_layer_input = layer_output
-                
             layer_output_list.append(layer_output)
+            stacked_tensor = torch.stack(layer_output_list, dim=0)
+            if layer_count == 0:
+                cur_layer_input = layer_output # no residual connection for first lstm cell, removes probelms where input and hidden dim are not equal
+            elif layer_count != 0:
+                cur_layer_input = torch.sum(stacked_tensor, dim=0)
+            # Not yet fully tested !!
+                
             last_state_list.append([h, c])
+            layer_count += 1
 
         if not self.return_all_layers:
-            layer_output_list = layer_output_list[-1:][0]
+            layer_output_list = cur_layer_input # layer_output_list[-1:][0] # output is also a sum of all previous layer outputs
             
             final_layer_output = torch.zeros((b, seq_len, self.output_dim, height, width))
             for t in range(seq_len):
