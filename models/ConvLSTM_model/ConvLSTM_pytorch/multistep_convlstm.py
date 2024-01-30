@@ -161,7 +161,11 @@ class MultiStepConvLSTM(nn.Module):
                 output_inner.append(h)
             
             layer_output = torch.stack(output_inner, dim=1)
-            cur_layer_input = layer_output
+            cur_layer_input += layer_output # skip connection, remove += if no skip is wanted
+            # might be an issue if hidden dim is not equal to input dim
+            # If it is, need an if statement which ignores it for the first cell
+            # Might also want to add more residual connections between layers, not just the previous one
+            # Not yet fully tested !!
                 
             layer_output_list.append(layer_output)
             last_state_list.append([h, c])
