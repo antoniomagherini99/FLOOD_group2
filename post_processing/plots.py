@@ -103,11 +103,6 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     n_features = dataset[0][1].shape[1]
     n_pixels = dataset[0][1].shape[-1]
     time_steps = dataset[0][1].shape[0]
-
-    # print(f'Samples: {n_samples}')
-    # print(f'Features: {n_features}')
-    # print(f'Pixels: {n_pixels}')
-    # print(f'Time steps: {time_steps}\n')
     
     # initialize inputs and outputs
     inputs = []
@@ -116,9 +111,6 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     for i in range(n_samples):
         inputs.append(dataset[i][0])
         targets.append(dataset[i][1])
-
-    # print(f'Inputs shape: {np.shape(inputs[0])}, targets shape: {np.shape(targets[0])}')
-    # print(f'Input type: {type(inputs)}\n')
 
     # initialize denormalization of dataset
     elevation = np.zeros((n_samples, n_pixels, n_pixels))
@@ -132,29 +124,16 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
                                                             scaler_x, scaler_y)
         # make predictions
         preds = obtain_predictions(model, inputs[i], device, time_steps)
-    
-    # print(f'Elevation {elevation}, shape: {elevation.shape}, type: {type(elevation)}')
-    # print(f'water_depth shape: {water_depth.shape}, type: {type(water_depth)}')
-    # print(f'discharge shape: {discharge.shape}, type: {type(discharge)}')
-    # print(f'predictions shape: {preds.shape}, type: {type(preds)}')
-    # print(f'predictions wd shape: {preds[:,0].shape}, type: {type(preds[:,0])}')
-    # print(f'predictions q shape: {preds[:,0].shape}, type: {type(preds[:,0])}\n')
 
     # compute MSE losses
     for feature in range(n_features):
             for i in range(n_samples):
                  losses[i, feature] = nn.MSELoss()(preds[:][feature], targets[i][:][feature])
-    # print(f'losses shape: {losses.shape}, type: {type(losses)}\n')
     
     # average over columns = features
     avg_loss = torch.mean(losses, dim=1)
-    # print(f'Avg loss shape: {avg_loss.shape}, type:{type(avg_loss)}\n')
 
-    # compute recall - improvement: add minimium threshold for recall (wd > 10 cm), need to denormalize targets and predictions
-    # ask scaler what 10 is and plot that scaler_wd.transform(0.10) - check
-    
     recall, _, _ = confusion_mat(dataset, model, scaler_y, device, thresholds)
-    # print(f'recall: {recall}, shape: {recall.shape}\n')
 
     # sorting dataset
     _, sorted_indexes = torch.sort(avg_loss)
@@ -162,36 +141,10 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     sorted_loss = losses[sorted_indexes, :]
     denorm_loss = scaler_y.inverse_transform(sorted_loss) # Loss now contains units
     
-    # sorted_loss = []
-    # for i in range(n_samples):
-    #      for j in range(n_features):
-    #           sorted_loss[i, j] = sorted_indexes[i]
-    # print(f'sorted_indexes: {sorted_indexes},\n\
-# sorted_loss wd: {sorted_l_wd},\n\sorted_loss q: {sorted_l_q}')
-    # print(f'sorted_indexes shape: {sorted_indexes.shape}, sorted_loss wd shape: {sorted_l_wd.shape}, sorted_loss q shape: {sorted_l_q.shape}\n')
     elevation_sorted = elevation[sorted_indexes]
     elev_sorted_tensor = torch.Tensor(elevation_sorted)
-    # print(len(elevation_sorted[:][:][:]))
-    # print(elevation_sorted[:][:][:])
-    # print(f'Elevation sorted shape: {elevation_sorted.shape}, type: {type(elevation_sorted)}')
-    # print(f'Check if they are the same {elevation==elevation_sorted}')
-    
-    # compute mean over x- and y-direction 
-    #mean_elev = torch.mean(elev_sorted_tensor, dim=(1,2))
-    # compute variation
-    #var_elev = elev_sorted_tensor - mean_elev[:, np.newaxis, np.newaxis]
-    
-    # not needed actually
-    # wd_sorted = [water_depth[i] for i in sorted_indexes]
-    # q_sorted  = [discharge[i] for i in sorted_indexes]   
-    # print(f'wd_sorted shape: {wd_sorted.shape}, type: {type(wd_sorted)}')
-    # print(f'Check if they are the same {water_depth==wd_sorted}\n')
-    # print(f'wd_sorted shape: {q_sorted.shape}, type: {type(q_sorted)}')
-    # print(f'Check if they are the same {discharge==q_sorted}\ng')
     
     sorted_recall = recall[sorted_indexes]
-    # print(f'sorted_recall shape: {sorted_recall.shape}, type: {type(sorted_recall)}')
-    # print(f'Check if they are the same {recall==sorted_recall}\n')
     
     # plot 
     fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True) 
@@ -202,7 +155,7 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     
     sample_list = np.arange(0, n_samples)
     
-    axes[0].boxplot(elev_sorted_tensor.reshape(n_samples, -1), positions = range(0, n_samples), showfliers=False)  #(var_elev.reshape(128, -1), showfliers=False) 
+    axes[0].boxplot(elev_sorted_tensor.reshape(n_samples, -1), positions = range(0, n_samples), showfliers=False)  
     axes[1].scatter(sample_list, denorm_loss[:, 0], color='blue', marker='x', label='water depth') 
     ax1_2.scatter(sample_list, denorm_loss[:, 1], color='red', marker='x', label='discharge') 
     axes[2].scatter(sample_list, sorted_recall, color='green', marker='x', label='recall') 
@@ -215,7 +168,6 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
         
     fig.legend(bbox_to_anchor=(0.27, 0.67))
 
-     
     axes[0].set_ylabel('Elevation [m]')
     axes[1].set_ylabel('Water Depth loss [m]')
     ax1_2.set_ylabel(r'Discharge loss [$m^{3} s^{-1} m^{-1}$]')
