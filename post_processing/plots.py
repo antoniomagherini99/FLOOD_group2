@@ -27,7 +27,7 @@ def plot_losses(train_losses, validation_losses, model):
     plt.yscale('log')
     plt.title(model_who + ' training and validation losses')
     plt.xlabel('Epochs [-]')
-    plt.ylabel('Nromalized Loss [-]')
+    plt.ylabel('Normalized Loss [-]')
     plt.gca().yaxis.set_label_coords(-0.01, 0.5)
     plt.legend()
     plt.show()
