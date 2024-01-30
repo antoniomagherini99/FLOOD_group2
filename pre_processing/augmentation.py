@@ -26,10 +26,10 @@ class MultiFixedRotation:
 
     def __call__(self, x, seed):
         random.seed(seed)
-        angle = random.choice(self.angles, seed)
+        angle = random.choice(self.angles)
         return transforms.functional.rotate(x, angle)
 
-def augmentation(train_dataset, seed=42, angles=[90,180,270], p_hflip=0.5, full=True):
+def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     '''
     Function for implementing data augmentation of inputs (DEM, X- and Y-Slope,
     Water Depth, and Discharge).
@@ -49,10 +49,11 @@ def augmentation(train_dataset, seed=42, angles=[90,180,270], p_hflip=0.5, full=
     
     # transformation pipeline with horizontal flip
     transformation_pipeline = transforms.Compose([
-        transforms.RandomHorizontalFlip(p=p_hflip)])
+        transforms.RandomHorizontalFlip(p=p_hflip), 
+        transforms.RandomVerticalFlip(p=p_hflip)])
     
     # rotation with MultiFixedRotation class
-    multi_fixed_rotation = MultiFixedRotation(angles, seed)
+    # fixed_rotation = MultiFixedRotation(angles)
     
     # initialize lists needed for looping
     inputs = []
@@ -65,9 +66,10 @@ def augmentation(train_dataset, seed=42, angles=[90,180,270], p_hflip=0.5, full=
         inputs.append(train_dataset[idx][0])
         outputs.append(train_dataset[idx][1]) 
         
+        seed = random.randint(0, 100)
         # apply augmentation (flipping + rotation)
-        transformed_inputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][0])))
-        transformed_outputs.append(multi_fixed_rotation(transformation_pipeline(train_dataset[idx][1])))   
+        transformed_inputs.append(transformation_pipeline(train_dataset[idx][0])) # fixed_rotation(..., seed)
+        transformed_outputs.append(transformation_pipeline(train_dataset[idx][1]))   
 
     # transformed_dataset = multi_fixed_rotation(transformation_pipeline(train_dataset))
 
