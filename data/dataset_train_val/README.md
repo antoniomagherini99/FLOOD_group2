@@ -1,1 +1,0 @@
-This folder contains the training and validation dataset to be used in the FLOOD project.

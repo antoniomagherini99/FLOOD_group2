@@ -16,16 +16,16 @@ def plot_losses(train_losses, validation_losses, model):
     
     Inputs: train_losses = list containing training losses throughout epochs
             validation_losses =  list containing validation losses throughout epochs
-            model = 'CNN' or 'ConvLSTM', key that specifies model used 
+            model used for training
 
     Outputs: None 
     '''
-
+    model_who = str(model.__class__.__name__)
     plt.figure() 
     plt.plot(train_losses, color='blue', ls='--', label='Training')
     plt.plot(validation_losses, color='red', ls='--', label='Validation')
     plt.yscale('log')
-    plt.title(model + 'training and validation losses')
+    plt.title(model_who + ' training and validation losses')
     plt.xlabel('Epochs [-]')
     plt.ylabel('Nromalized Loss [-]')
     plt.gca().yaxis.set_label_coords(-0.01, 0.5)

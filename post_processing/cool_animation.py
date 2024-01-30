@@ -185,14 +185,6 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
         Default is False. If True, will save the animation in the
         post_processing folder with the title in the format:
         'train_val + model_who + sample'.
-    
-    Raises
-    ------
-    Exception
-        Problem with the implementation of the model, check if statements after
-        the variable "model_who" is defined
-    TypeError
-        Check the type of save
         
     Returns
     -------
