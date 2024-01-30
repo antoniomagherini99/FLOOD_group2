@@ -1,1 +1,0 @@
-This folder contains the 2nd dataset to be used in the FLOOD project.
