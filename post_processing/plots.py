@@ -83,7 +83,8 @@ def plot_test_loss(dataset, model, train_val, device):
     
     return None
 
-def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device):
+def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
+                thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge)
@@ -97,7 +98,7 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device):
 
     # get inputs and outputs
     # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
-    
+    model_who = str(model.__class__.__name__)
     n_samples = len(dataset)
     n_features = dataset[0][1].shape[1]
     n_pixels = dataset[0][1].shape[-1]
@@ -152,14 +153,14 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device):
     # compute recall - improvement: add minimium threshold for recall (wd > 10 cm), need to denormalize targets and predictions
     # ask scaler what 10 is and plot that scaler_wd.transform(0.10) - check
     
-    recall, _, _ = confusion_mat(dataset, model, device)
+    recall, _, _ = confusion_mat(dataset, model, scaler_y, device, thresholds)
     # print(f'recall: {recall}, shape: {recall.shape}\n')
 
     # sorting dataset
     _, sorted_indexes = torch.sort(avg_loss)
     
     sorted_loss = losses[sorted_indexes, :]
-    denorm_loss = scaler_y.inverse_transform(sorted_loss)
+    denorm_loss = scaler_y.inverse_transform(sorted_loss) # Loss now contains units
     
     # sorted_loss = []
     # for i in range(n_samples):
@@ -222,16 +223,18 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device):
 
     axes[0].set_title('DEM elevation and variation')
     axes[1].set_title('MSE loss')
-    axes[2].set_title('Recall')
+    axes[2].set_title('Water Depth Recall')
 
-    fig.suptitle('Sorting based on increasing average loss', fontsize=15)
+    fig.suptitle(train_val + ': Peformance of ' + model_who + ' with respect to the variablity of the DEM', fontsize=15)
     plt.xlim(-1, n_samples+1)
     plt.show()
     return None
 
-def plot_metrics(dataset, model, train_val, device):
+def plot_metrics(dataset, model, train_val, scaler_y, device,
+                 thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
     model_who = str(model.__class__.__name__)
-    recall, accuracy, f1 = confusion_mat(dataset, model, device)
+    recall, accuracy, f1 = confusion_mat(dataset, model,
+                                         scaler_y, device, thresholds)
     
     num_samples = len(dataset)
     sample_array = np.arange(0, num_samples)

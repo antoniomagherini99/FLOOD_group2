@@ -153,7 +153,8 @@ def animated_plot(figure, animated_tensor, axis,
 
 
 def plot_animation(sample, dataset, model, train_val, scaler_x,
-                   scaler_y, device='cuda', save=False):
+                   scaler_y, device='cuda', save=False,
+                   thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
     '''
     Plot animation to visualize the evolution of certain variables over time.
     Assumes that the model can output water depth and discharge.
@@ -254,7 +255,8 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     ax4.legend()
     
     # Subplot 7
-    recall, _, _ = confusion_mat(dataset, model, device, True, sample)
+    recall, _, _ = confusion_mat(dataset, model, scaler_y,
+                                 device, thresholds, True, sample)
 
     ax7.set_box_aspect(1)
     ax7.plot(time_step_array, recall[0], label = wd_label)

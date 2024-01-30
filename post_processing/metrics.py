@@ -1,14 +1,24 @@
 import torch
 from models.ConvLSTM_model.train_eval import obtain_predictions
 
-def threshold_function(tensor):
+def threshold_function(tensor, thresholds, scaler_y):
      '''
      Use a tensor to return a binary tensor which has ones at non zero elements
-     and zeros at zero elements
+     and zeros at elements below the predefined threshold for each feature
      '''
-     ## Too lazy to implement scaler_y in all functions.
-     ## Needed if we want to include a threshold which is non zero.
-     return torch.where(tensor > 0, torch.tensor(1), torch.tensor(0))
+     # tensors are expected to be normalized
+     norm_thresholds = scaler_y.transform(thresholds)
+     
+     feature_list = []
+     for feature in range(tensor.shape[1]):
+         feature_threshold = norm_thresholds[0, feature]
+         feature_tensor = tensor[:, feature]
+     
+         binary_feature = torch.where(feature_tensor > feature_threshold,
+                                      torch.tensor(1), torch.tensor(0)).unsqueeze(1) # recreate index 1 to concat later
+         feature_list.append(binary_feature)
+     binary_tensor = torch.cat(feature_list, dim = 1)
+     return binary_tensor
 
 def binary_recall(pred_binary, target_binary):
     true_positives = torch.sum(pred_binary * target_binary)
@@ -31,7 +41,9 @@ def binary_f1_score(pred_binary, target_binary):
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
     return f1
 
-def confusion_mat(dataset, model, device, sample = False, sample_num = 0):
+def confusion_mat(dataset, model, scaler_y, device,
+                  thresholds = torch.tensor([0.1, 0]).reshape(1, -1),
+                  sample = False, sample_num = 0):
     # only needed if sample == False
     metrics_tensor = torch.zeros((3, len(dataset))) # recall, accuracy, f1
     
@@ -46,8 +58,8 @@ def confusion_mat(dataset, model, device, sample = False, sample_num = 0):
         
         preds = obtain_predictions(model, input, device, time_steps)
         
-        target_binary = threshold_function(target)
-        pred_binary = threshold_function(preds)
+        target_binary = threshold_function(target, thresholds, scaler_y)
+        pred_binary = threshold_function(preds, thresholds, scaler_y)
         
         fet = target.shape[1]
         time_steps = target.shape[0]
