@@ -191,7 +191,7 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
     axes[0].set_title('DEM elevation and variation')
     axes[1].set_title('MSE loss')
     axes[2].set_title(f'Water Depth Recall\n\
-with a minimum threshold of {thresholds[0,0]} m')
+with a minimum threshold of {thresholds[0,0]:.2f} m')
 
     fig.suptitle(train_val_test + ': Peformance of ' + model_who + ' with respect to the variablity of the DEM', fontsize=15)
     plt.xlim(-1, n_samples+1)
