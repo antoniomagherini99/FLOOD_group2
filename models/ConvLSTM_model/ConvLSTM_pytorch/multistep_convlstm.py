@@ -37,7 +37,7 @@ class ConvLSTMCell(nn.Module):
                               padding=self.padding,
                               bias=self.bias)
         
-        init.xavier_normal_(self.conv.weight) # better fit form tanh and sigmoid activations
+        init.orthogonal_(self.conv.weight) # better fit for tanh and sigmoid activations
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
@@ -109,7 +109,7 @@ class MultiStepConvLSTM(nn.Module):
                                out_channels = self.output_dim, kernel_size = 1,
                                padding = 0, bias = True)
         
-        init.kaiming_uniform_(self.conv2.weight, nonlinearity='relu') # initializer is optimized for relu activation
+        init.kaiming_normal_(self.conv2.weight, nonlinearity='relu') # initializer is optimized for relu activation
         cell_list = []
         for i in range(0, self.num_layers):
             cur_input_dim = self.input_dim if i == 0 else self.hidden_dim[i - 1]
@@ -167,11 +167,11 @@ class MultiStepConvLSTM(nn.Module):
             
             layer_output = torch.stack(output_inner, dim=1)
             layer_output_list.append(layer_output)
-            stacked_tensor = torch.stack(layer_output_list, dim=0)
+            stacked_tensor = torch.stack(layer_output_list, dim=0) # overwritten every iteration
             if layer_count == 0:
                 cur_layer_input = layer_output # no residual connection for first lstm cell, removes probelms where input and hidden dim are not equal
             elif layer_count != 0:
-                cur_layer_input = torch.sum(stacked_tensor, dim=0)
+                cur_layer_input = torch.sum(stacked_tensor, dim=0) # cur_layer_input + layer_output # residual connections with all previous inputs OR the previous input
             # Not yet fully tested !!
                 
             last_state_list.append([h, c])
@@ -182,7 +182,7 @@ class MultiStepConvLSTM(nn.Module):
             
             final_layer_output = torch.zeros((b, seq_len, self.output_dim, height, width))
             for t in range(seq_len):
-                final_layer_output[:, t] = F.relu(self.conv2(layer_output_list[:, t])) # 1x1 kernel to reduce from hidden dim to number of outputs
+                final_layer_output[:, t] = self.conv2(layer_output_list[:, t]) # 1x1 kernel to reduce from hidden dim to number of outputs
 
         return final_layer_output
 
