@@ -85,17 +85,18 @@ def evaluation_conv_lstm(model, loader, device):
     model.eval() # specifies that the model is in evaluation mode 
 
     losses = []
-
-    for batch in loader:
-        sequence_length = batch[1].shape[1]
-        x = batch[0]
-        y = batch[1].to(device)
-
-        predictions = obtain_predictions(model, x, device, sequence_length)
-        # MSE loss function
-        loss = nn.MSELoss()(predictions, y)
-        
-        losses.append(loss.cpu().detach())
+    
+    with torch.no_grad():
+        for batch in loader:
+            sequence_length = batch[1].shape[1]
+            x = batch[0]
+            y = batch[1].to(device)
+    
+            predictions = obtain_predictions(model, x, device, sequence_length)
+            # MSE loss function
+            loss = nn.MSELoss()(predictions, y)
+            
+            losses.append(loss.cpu().detach())
 
     losses = np.array(losses).mean()
 
