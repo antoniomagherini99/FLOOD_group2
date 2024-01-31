@@ -12,12 +12,12 @@ def retrieve_path(train_val_test):
     
     Parameters
     ----------
-    train_val : str
-        key for specifying what we are using the model for
-            'train_val' = train and validate the model
-            'test1' = test the model with dataset 1
-            'test2' = test the model with dataset 2
-            'test3' = test the model with dataset 3
+    train_val_test : str
+                     key for specifying what we are using the model for
+                     'train_val' = train and validate the model
+                     'test1' = test the model with dataset 1
+                     'test2' = test the model with dataset 2
+                     'test3' = test the model with dataset 3
 
     Returns
     -------
@@ -34,8 +34,6 @@ def retrieve_path(train_val_test):
     path = path_dictionary[train_val_test]
     return path
 
-# ------------- #
-
 def count_pixels(train_val_test):
     """
     Calculate the number of pixels contained in row/column of image of a
@@ -44,11 +42,11 @@ def count_pixels(train_val_test):
     Parameters
     ----------
     train_val_test : str
-        key for specifying what we are using the model for
-            'train_val' = train and validate the model
-            'test1' = test the model with dataset 1
-            'test2' = test the model with dataset 2
-            'test3' = test the model with dataset 3
+                     key for specifying what we are using the model for
+                     'train_val' = train and validate the model
+                     'test1' = test the model with dataset 1
+                     'test2' = test the model with dataset 2
+                     'test3' = test the model with dataset 3
 
     Returns
     -------
@@ -58,9 +56,11 @@ def count_pixels(train_val_test):
     """
     dir_path = retrieve_path(train_val_test)
     
-    folder_path = dir_path + 'DEM/' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+    # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+    folder_path = dir_path + 'DEM/' 
     
-    file_path = folder_path + str(os.listdir(folder_path)[0]) # first file in folder
+    # get the first file in folder
+    file_path = folder_path + str(os.listdir(folder_path)[0]) 
     
     elevation_data = np.loadtxt(file_path)
 
@@ -68,7 +68,6 @@ def count_pixels(train_val_test):
     pixel_square = int(np.sqrt(tot_pixels)) # Image is always a square
     return pixel_square
 
-# @njit
 def process_elevation_data(file_id, train_val_test='train_val', pixel_square = 64):
     """
     Processes elevation data from a DEM file.
@@ -91,6 +90,7 @@ def process_elevation_data(file_id, train_val_test='train_val', pixel_square = 6
         A tensor combining the original elevation data and its slopes for a
         given sample in x and y directions. shape (3 x 64 x 64).
     """
+    # get file path
     dir_path = retrieve_path(train_val_test)
     file_path = dir_path + f'DEM/DEM_{file_id}.txt'
 
@@ -107,8 +107,6 @@ def process_elevation_data(file_id, train_val_test='train_val', pixel_square = 6
         (elevation_tensor, slope_x, slope_y), dim=0)
 
     return elevation_slope_tensor
-
-# ------------- #
 
 def process_water_depth(file_id, train_val_test='train_val',
                         time_step=0, pixel_square = 64):
@@ -156,16 +154,13 @@ def process_water_depth(file_id, train_val_test='train_val',
     except IndexError:
         raise IndexError(f"Time step {time_step} is out of range for the file {file_path}.")
 
-# ------------- #
-
 def process_velocities(file_id, train_val_test='train_val', time_step=0, pixel_square = 64):
     """
     Processes velocities for a given dataset
 
     Parameters
     ----------
-    file_id: int
-        Identifier of the velocity files to be processed.
+    file_id: int, Identifier of the velocity files to be processed.
     train_val_test: key for specifying what we are using the model for
                    'train_val' = train and validate the model
                    'test1' = test the model with dataset 1
@@ -179,10 +174,10 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0, pixel_s
     Returns
     -------
     vel_x: torch.Tensor
-        Tenosr containing the horizontal velocites for a given time step of a 
+        Tensor containing the horizontal velocites for a given time step of a 
         file in dataset. Shape is pixel x pixel.
     vel_y: torch.Tensor
-      Tenosr containing the vertical velocites for a given time step of a 
+      Tensor containing the vertical velocites for a given time step of a 
       file in dataset. Shape is pixel x pixel.
     """
     dir_path = retrieve_path(train_val_test)
@@ -204,7 +199,7 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0, pixel_s
         vel_x = [float(val) for val in selected_row_x]
         vel_y = [float(val) for val in selected_row_y]
 
-        # Validate and reshape the data into a 64x64 tensor
+        # validate and reshape the data into a tensor with specified dimension (number of pixels)
         if (len(vel_x) == pixel_square * pixel_square) and (len(vel_y) == pixel_square * pixel_square):
             vel_x = torch.tensor(vel_x).view(pixel_square, pixel_square)
             vel_y = torch.tensor(vel_y).view(pixel_square, pixel_square)
@@ -213,8 +208,6 @@ def process_velocities(file_id, train_val_test='train_val', time_step=0, pixel_s
             raise ValueError(f"The number of elements in {file_path_x} or {file_path_y} at time step {time_step} doesn't match a 64x64 matrix.")
     except IndexError:
         raise IndexError(f"Time step {time_step} is out of range for the file {file_path_x} or {file_path_y}.")
-
-# ------------- #
 
 def compute_targets(file_id, train_val_test = 'train_val', time_step = 0, pixel_square = 64):
     """
@@ -227,6 +220,8 @@ def compute_targets(file_id, train_val_test = 'train_val', time_step = 0, pixel_
                    'test1' = test the model with dataset 1
                    'test2' = test the model with dataset 2
                    'test3' = test the model with dataset 3
+    time_step = int
+        Time step of the prediction, default = 0 
     pixel_square : int
         Number of pixels in a row/column of the image.
 
@@ -236,22 +231,26 @@ def compute_targets(file_id, train_val_test = 'train_val', time_step = 0, pixel_
     water_depth = process_water_depth(file_id, train_val_test, time_step, pixel_square)
     vx, vy = process_velocities(file_id, train_val_test, time_step, pixel_square)
 
+    # get magnitude of velocity
     magnitude = torch.sqrt(vx**2 + vy**2)
-    discharge = water_depth * magnitude # per meter width
+    # get discharge per meter width 
+    discharge = water_depth * magnitude 
 
     targets = torch.stack((water_depth, discharge), dim=0)
     return targets
-
-# ------------- #
 
 def load_all_boys(train_val_test, time=97):
     '''
     Load all "file_id" and "time_step" for chosen dataset
 
     Input: 
-    train_val_test = key for choosing dataset  
-         = 'train_val', 'test1', 'test2', 'test3'
-    time = time step of simulation # 97 is hardcoded !
+    train_val_test: key for specifying what we are using the model for
+                   'train_val' = train and validate the model
+                   'test1' = test the model with dataset 1
+                   'test2' = test the model with dataset 2
+                   'test3' = test the model with dataset 3
+    time = int
+         Time step of the prediction, default = 97 (last time step)
 
     Output:
     inputs: torch.Tensor which contains DEM, slope x and y for all files in a dataset
@@ -262,17 +261,23 @@ def load_all_boys(train_val_test, time=97):
     file_path = retrieve_path(train_val_test)
     
     count = 0
-    dir_path = file_path + 'DEM' # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+
+    # Arbitrary choice as DEM, vx, vy and WD all have the same number of samples
+    dir_path = file_path + 'DEM' 
+
+    # get file path
     for path in os.listdir(dir_path):
         if os.path.isfile(os.path.join(dir_path, path)):
             count += 1
         else:
             None
     
+    # get number of pixels and initialize tensors
     pixel_square = count_pixels(train_val_test)
     inputs = torch.zeros((count, 3, pixel_square, pixel_square))
     targets = torch.zeros((count, time, 2, pixel_square, pixel_square))
 
+    # get files and create inputs and targets tensors
     i = 0
     for path in os.listdir(dir_path):
         file_number = re.search(r'\d{1,5}', path)
