@@ -1,4 +1,4 @@
-# .py file containing the functions used for normalizing datasets in ConvLSTM model for DSAIE FLOOD project.
+# .py file containing the functions used for normalizing datasets for DSAIE FLOOD project.
 
 import torch
 import copy
