@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from models.ConvLSTM_model.train_eval import obtain_predictions
+from models.ConvLSTM_model.train_eval import *
 from post_processing.metrics import confusion_mat
 from pre_processing.normalization import *
 
@@ -34,7 +34,7 @@ def plot_losses(train_losses, validation_losses, model):
 
     return None
 
-def plot_test_loss(dataset, model, train_val_test, device):
+def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
     '''
     Plot test loss for each sample of the requested dataset and model
 
@@ -71,7 +71,7 @@ def plot_test_loss(dataset, model, train_val_test, device):
         time_steps = target.shape[0]
         preds = obtain_predictions(model, dataset[sample][0], device, time_steps)
         
-        loss_sample[sample] = nn.MSELoss()(preds, target)
+        loss_sample[sample] = choose_loss(loss_f, preds, target)
     
     plt.figure()
     plt.scatter(sample_array, loss_sample)
@@ -85,7 +85,7 @@ def plot_test_loss(dataset, model, train_val_test, device):
     return None
 
 def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
-                thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
+                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE'):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge), the relative Water Depth and 
@@ -104,6 +104,10 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
            thresholds: torch.tensor, Denormalized thresholds for each feature. Expects a tensor that 
                         has shape: (1 x num_features). 
                         default = 0.1 m
+           loss_f = str, key that specifies the function for computing the loss, 
+                    accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+                    default = 'MSE'
+                    
     Output: None (plot)
     '''
 
@@ -139,7 +143,7 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
     # compute MSE losses
     for feature in range(n_features):
             for i in range(n_samples):
-                 losses[i, feature] = nn.MSELoss()(preds[:][feature], targets[i][:][feature])
+                 losses[i, feature] = choose_loss(loss_f, preds[:][feature], targets[i][:][feature])
     
     # average over columns = features
     avg_loss = torch.mean(losses, dim=1)
