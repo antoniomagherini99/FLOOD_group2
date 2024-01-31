@@ -236,7 +236,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     # compute losses
     for step in range(time_steps):
         for feature in range(features):
-            losses[feature, step] = choose_loss(loss_f(preds[step][feature], target[step][feature]))
+            losses[feature, step] = choose_loss(loss_f, preds[step][feature], target[step][feature])
     
     wd_label, _ = definitions(0)
     q_label, _ = definitions(1)
