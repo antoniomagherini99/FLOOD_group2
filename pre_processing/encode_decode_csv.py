@@ -10,16 +10,30 @@ from pre_processing.load_datasets import retrieve_path, count_pixels
 
 def encode_into_csv(inputs, targets, train_val_test):
     """
-    Due to the long run time of computing all inputs and targets, these will be encoded into a csv file
-    to reduce the computatio duration
+    Due to the long run time of computing all inputs and targets,
+    these will be encoded into a csv file to reduce the computational duration
 
-    Input:
-    inputs: torch.tensor of shape: samples x 3 x 64 x 64 which represents the inputs of the network
-    targets: torch.tensor of shape: samples x time steps x 64 x 64 which represents the targets of the network
-    train_val_test: str, differentiate between csv files
+    Parameters
+    ----------
+    inputs: torch.tensor of shape: (samples x input_features = 3 x pixel x pixel)
+        which represents the inputs. Contains DEM, and slopes x & y.
+    targets: torch.tensor of shape: (samples x time steps x target_features x 
+        pixel x pixel) which represents the targets. Contains all time steps 
+        including time step 0 and half time stpes.
+    train_val_test: key for specifying what we are using the model for
+        'train_val' = train and validate the model
+        'test1' = test the model with dataset 1
+        'test2' = test the model with dataset 2
+        'test3' = test the model with dataset 3
 
-    Outputs:
-    None: But a csv file is create with a predetermined name
+    Returns
+    -------
+    df_inputs: pandas.dataframe
+        Contains the flatened array of inputs
+        length = (num_samples x input_features = 3 x pixel x pixel)
+    df_targets: pandas.dataframe
+        Contains the flattened array of targets
+        length = (num_samples x time_steps x target_features = 2 x pixel x pixel)
     """
     # Flatten the tensors and concatenate them along the specified dimension
     flattened_tensor1 = torch.flatten(inputs, start_dim=0)
@@ -57,17 +71,24 @@ def decode_from_csv(train_val_test):
     .csv file will be opened at the start of every notebook which
     represents the inputs and targets for a certain dataset.
 
-    Input:
-    train_val_test: str, identifies which dataset is being retrieved
+    Parameters
+    ----------
+    train_val_test: key for specifying what we are using the model for
+        'train_val' = train and validate the model
+        'test1' = test the model with dataset 1
+        'test2' = test the model with dataset 2
+        'test3' = test the model with dataset 3
 
-    Output:
+    Returns
+    -------
     dataset: contains two torch.Tensors with length equal to number of samples
-        inputs: contains DEM, slope x and y and the boundary condition
-            for water depth for all files in a dataset.
-            Shape is 4 x pixel_square x pixel_square
-        targets: contains water depth and discharge for all files in a dataset.
-            Shape is time_steps (96) x 2 x pixel_square (64) x pixel_square for training and validation dataset, dataset 1, dataset 2
-                                (241) x 2 x pixel_square (128) x pixel_square for dataset 3
+        Shape: (num_samples x 2)
+        index [:, 0]: inputs. Contains DEM, slope x and y and the boundary
+            condition for water depth for all files in a dataset.
+            Shape: (time_step = 1 x num_features = 4 x pixel x pixel)
+        index [:, 1]: targets. Contains water depth and discharge for all files
+            in a dataset. Shape: (time_steps x num_features = 2 x pixel x pixel)
+            
     """
     dir_path = retrieve_path(train_val_test)
     
