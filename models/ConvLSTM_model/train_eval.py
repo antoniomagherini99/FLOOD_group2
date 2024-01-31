@@ -55,7 +55,7 @@ def obtain_predictions(model, input, device, steps = 0):
                         'implemented correctly')
     return predictions
 
-def train_epoch_conv_lstm(model, loader, optimizer, device='cuda'):
+def train_epoch_conv_lstm(model, loader, optimizer, device='cuda', loss='MSE'):
     '''
     Function for training and validating the trained model.
     It uses MSE loss.
@@ -65,6 +65,9 @@ def train_epoch_conv_lstm(model, loader, optimizer, device='cuda'):
             optimizer : chosen optimizer for SGD 
             device : str
                      Device on which to perform the computations; 'cuda' is the default.
+            loss = str, key that specifies the function for computing the loss, 
+                   accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+                   default = 'MSE'
     
     Outputs: losses : MSE training loss between predictions and targets 
     '''
@@ -80,7 +83,13 @@ def train_epoch_conv_lstm(model, loader, optimizer, device='cuda'):
         predictions = obtain_predictions(model, x, device, sequence_length)
         
         # MSE loss function
-        loss = nn.MSELoss()(predictions, y)
+        if loss == 'MSE':
+            loss = nn.MSELoss()(predictions, y)
+        elif loss == 'MAE':
+            loss = nn.L1Loss()(predictions, y)
+        else:
+            raise Exception('The specified loss function is not MSE nor MAE or you spelled it wrongly.\n\
+Set loss="MSE" for Mean Squared Error or loss="MAE" for Mean Absolut Error.')
         
         losses.append(loss.cpu().detach())
         
@@ -93,7 +102,7 @@ def train_epoch_conv_lstm(model, loader, optimizer, device='cuda'):
 
     return losses
 
-def evaluation_conv_lstm(model, loader, device='cuda'):
+def evaluation_conv_lstm(model, loader, device='cuda', loss='MSE'):
     '''
     Function for validating the trained model.
     It uses MSE loss.
@@ -119,7 +128,13 @@ def evaluation_conv_lstm(model, loader, device='cuda'):
             predictions = obtain_predictions(model, x, device, sequence_length)
             
             # MSE loss function
-            loss = nn.MSELoss()(predictions, y)
+            if loss == 'MSE':
+                loss = nn.MSELoss()(predictions, y)
+            elif loss == 'MAE':
+                loss = nn.L1Loss()(predictions, y)
+            else:
+                raise Exception('The specified loss function is not MSE nor MAE or you spelled it wrongly.\n\
+Set loss="MSE" for Mean Squared Error or loss="MAE" for Mean Absolut Error.')
             
             losses.append(loss.cpu().detach())
 
