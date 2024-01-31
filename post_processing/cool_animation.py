@@ -19,11 +19,6 @@ def definitions(index):
     index : int
         0 represents water depth
         1 represents discharge
-        
-    Raises
-    ------
-    Exception
-        'Variable "index" must be 0 or 1'
 
     Returns
     -------
@@ -152,7 +147,7 @@ def animated_plot(figure, animated_tensor, axis,
     return image
 
 
-def plot_animation(sample, dataset, model, train_val, scaler_x,
+def plot_animation(sample, dataset, model, train_val_test, scaler_x,
                    scaler_y, device='cuda', save=False,
                    thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
     '''
@@ -168,7 +163,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
         Normalized dataset of train_val or test (1, 2, or 3).
     model : class of model
         Model to predict on the sample.
-    train_val : str
+    train_val_test : str
         key for specifying what we are using the model for
             'train_val' = train and validate the model
             'test1' = test the model with dataset 1
@@ -183,8 +178,12 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
         Device on which to perform the computations; 'cuda' is the default.
     save : bool
         Default is False. If True, will save the animation in the
-        post_processing folder with the title in the format:
-        'train_val + model_who + sample'.
+        post_processing folder with the file name:
+        'train_val_test + model_who + sample'.
+    thresholds: torch.Tensor
+        Denormalized thresholds for each feature. Expects a tensor that
+        has shape: (1 x num_features).
+        The default is torch.tensor([0.1, 0]).reshape(1, -1).
         
     Returns
     -------
@@ -200,12 +199,12 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
 
     # Denormalizing the data for plotting
     elevation, water_depth, discharge = denormalize_dataset(
-        input, target, train_val, scaler_x, scaler_y)
+        input, target, train_val_test, scaler_x, scaler_y)
     
     model_who = str(model.__class__.__name__)
     preds = obtain_predictions(model, input, device, time_steps)
         
-    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val, scaler_x, scaler_y)
+    _, wd_pred, q_pred = denormalize_dataset(input, preds, train_val_test, scaler_x, scaler_y)
 
     # Creating subplots
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax7, ax8, ax9)) = plt.subplots(
@@ -229,7 +228,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     losses = np.zeros((features, time_steps)) # initialize empty array
     time_step_array = np.arange(1, time_steps + 1)
     
-    # Compute losses uses MSELoss
+    # Compute losses using MSELoss
     for step in range(time_steps):
         for feature in range(features):
             losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
@@ -278,7 +277,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     diff_q = q_pred - discharge
     im9 = animated_plot(fig, diff_q, ax9, 'discharge', True)
 
-    title_con = train_val + f' for sample {sample} using model: ' + model_who
+    title_con = train_val_test + f' for sample {sample} using model: ' + model_who
     over_title = fig.suptitle('Hour 1: ' + title_con, fontsize=16) # try and update this to show the hour
 
     def animate(step):
@@ -306,7 +305,7 @@ def plot_animation(sample, dataset, model, train_val, scaler_x,
     plt.show()
 
     if save == True:
-        ani.save('post_processing/' + train_val + '_' + model_who + '_' +
+        ani.save('post_processing/' + train_val_test + '_' + model_who + '_' +
                  str(sample) + '.gif', writer='Pillow', fps=5)
     elif save == False:
         None

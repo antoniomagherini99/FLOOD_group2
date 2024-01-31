@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import copy
+import torch.nn.init as init
 
 class ConvLSTMCell(nn.Module):
 
@@ -35,6 +36,8 @@ class ConvLSTMCell(nn.Module):
                               kernel_size=self.kernel_size,
                               padding=self.padding,
                               bias=self.bias)
+        
+        init.xavier_normal_(self.conv.weight) # better fit form tanh and sigmoid activations
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
@@ -105,7 +108,8 @@ class MultiStepConvLSTM(nn.Module):
         self.conv2 = nn.Conv2d(in_channels = self.hidden_number, 
                                out_channels = self.output_dim, kernel_size = 1,
                                padding = 0, bias = True)
-
+        
+        init.kaiming_uniform_(self.conv2.weight, nonlinearity='relu') # initializer is optimized for relu activation
         cell_list = []
         for i in range(0, self.num_layers):
             cur_input_dim = self.input_dim if i == 0 else self.hidden_dim[i - 1]
