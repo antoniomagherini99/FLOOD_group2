@@ -1,0 +1,1 @@
+This folder contains the scalers that were saved during training. These scalers are used to normalize the input and output data of the test datasets.
