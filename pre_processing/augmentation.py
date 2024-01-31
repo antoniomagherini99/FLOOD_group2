@@ -57,7 +57,7 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     transformation_pipeline = transforms.Compose([transforms.RandomHorizontalFlip(p=p_hflip)])  
     
     # rotation with MultiFixedRotation class
-    fixed_rotation = MultiFixedRotation(angles)
+    # fixed_rotation = MultiFixedRotation(angles)
 
     n_samples = len(train_dataset)
 
@@ -91,29 +91,27 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     flipped_dataset = transformation_pipeline(concat)
 
     # transform original dataset - only rotation with different angles
-    rotated_concat1 = torch.stack(rotate(concat, 90))
-    rotated_concat2 = torch.stack(rotate(concat, 180))
-    rotated_concat3 = torch.stack(rotate(concat, 270))
+    rotated_concat1 = rotate(concat, 90)
+    rotated_concat2 = rotate(concat, 180)
+    rotated_concat3 = rotate(concat, 270)
 
     # transform original dataset - combine flipping and rotation with different angles
-    rotated_flipped1 = torch.stack(rotate(flipped_dataset, 90))
-    rotated_flipped2 = torch.stack(rotate(flipped_dataset, 180))
-    rotated_flipped3 = torch.stack(rotate(flipped_dataset, 270))
+    rotated_flipped1 = rotate(flipped_dataset, 90)
+    rotated_flipped2 = rotate(flipped_dataset, 180)
+    rotated_flipped3 = rotate(flipped_dataset, 270)
 
-    # apply rotation to each element: in this way the random angle of rotation changes every time  
-    # rotate_concat = [fixed_rotation(transforms.functional.rotate(i, random.choice(angles))) for i in transformed_concat]
-    
-    # stack the list to get a tensor 
-    # rotate_concat_tensor = torch.stack(rotate_concat)
+    # concatenate all transformed datasets
+    list_to_concat = [rotated_concat1, rotated_concat2, rotated_concat3,
+                              rotated_flipped1, rotated_flipped2, rotated_flipped3]
+    final_concat = torch.cat(list_to_concat)
 
-    # concatenate all transofrmed datasets
-    final_concat = torch.cat([train_dataset, rotated_concat1, rotated_concat2, rotated_concat3,
-                              rotated_flipped1, rotated_flipped2, rotated_flipped3])
+    # get length of the new dataset length for reshaping the full transformed dataset 
+    len_concat = len(list_to_concat)
 
     # reshape the tensors to original dimensions
-    transformed_inputs = final_concat[:, :flat_dim, :, :].view(n_samples, inputs_sizes[0], 
+    transformed_inputs = final_concat[:, :flat_dim, :, :].view(n_samples*len_concat, inputs_sizes[0], 
                                                                            inputs_sizes[1], inputs_sizes[2], inputs_sizes[3]) 
-    transformed_targets = final_concat[:, flat_dim:, :, :].view(n_samples, targets_sizes[0], 
+    transformed_targets = final_concat[:, flat_dim:, :, :].view(n_samples*len_concat, targets_sizes[0], 
                                                                            targets_sizes[1], targets_sizes[2], targets_sizes[3])
 
     # concatenate tensors
