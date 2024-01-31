@@ -148,7 +148,7 @@ Everyone: PP presentation, report, other to be discussed.
 10/1/24
 - Lucas and Antonio (2h)
 1. Able to get predictions from conv lstm
-2. Realized that loss is extremelly small for bad predictions
+2. Realized that loss is extremely small for bad predictions
 - Lucas (2.5h)
 0. Met with Roberto to discuss the project
 1. Updated cool_animation to include predictions
@@ -160,7 +160,7 @@ Everyone: PP presentation, report, other to be discussed.
 1. Played around with conv lstm model and ran the model for more epochs
 2. Attempted to denormalize inputs within cool animation
    Should start to divide that function into multiple ones, making it easier to use
-- Lucas and Antionio (2h)
+- Lucas and Antonio (2h)
 1. Preperation of slides
 
 12/1/24
@@ -182,13 +182,17 @@ Everyone: PP presentation, report, other to be discussed.
 1. Worked on post processing to implement feedback. Made it clearer where BC was located and added a new subplot for loss per frame.
 2. Code cleanup, to make functions more versatile and easier to change.
 
+15/01/24
+- Antonio (3 h)
+1. Worked on ConvLSTM model. 
+
 17/1/24
 - David (1h)
 1. Studying CNN model code and making initial notes for the report
 
 18/1/24
 - David (4h)
-1. Added way to visualize the model architecture + tested this on the CNN model. Tried (unsuccessfully to make the resulting visualization more legible by grouping blocks. 
+1. Added way to visualize the model architecture + tested this on the CNN model. Tried (unsuccessfully) to make the resulting visualization more legible by grouping blocks. 
 2. Wrote sub-sections on CNN data pre-processing, model architecture and model training for the report.
 
 23/1/24
@@ -201,7 +205,7 @@ Everyone: PP presentation, report, other to be discussed.
 - Lucas (5 h)
 1. Finished implementing metrics
 2. Worked on making convlstm model only work with a single layer instead of 48
-- Antonio (6 h) 
+- Antonio (4 h) 
 1. Worked on data augmentation
 2. Started working on post processing plots to show in which situation the model works better
 - Lucas And Antonio (2h)
@@ -212,12 +216,30 @@ Everyone: PP presentation, report, other to be discussed.
 1. Succesffuling implemented single layer convlstm model
 2. Removed pottential conflicts so that all functions could work regardless of model used
 - Antonio (8h)
-1. Worked on feedback recieved during yesterday's session
+1. Worked on feedback received during yesterday's session
 
 26/1/24
 - Antonio (8h)
-1. ...
+1. Data augmentation, testing functions, post-processing
+
+27/1/24
+- Antonio (8h)
+1. Data augmentation, testing functions, post-processing, improved encode_decode
 
 28/1/24
 - Lucas (1h)
 1. Debugged denormalization function and removed hardcoding in encode/decode csv py file
+- Antonio (8 h)
+1. Training ConvLSTM model with augmentation, worked on augmentation function and minor functions 
+
+29/01/24
+- Antonio (10 h)
+1. Data augmentation, training ConvLSTM, side stuff for post-processing
+
+30/01/24
+- Antonio (8 h)
+1. Final improvement of augmentation function, training ConvLSTM model
+
+31/01/24
+- Lucas and Antonio (8 h)
+1. Training ConvLSTM with augmentation
