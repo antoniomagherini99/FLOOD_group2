@@ -82,14 +82,8 @@ def train_epoch_conv_lstm(model, loader, optimizer, device='cuda', loss_f='MSE')
 
         predictions = obtain_predictions(model, x, device, sequence_length)
         
-        # MSE loss function
-        if loss_f == 'MSE':
-            loss = nn.MSELoss()(predictions, y)
-        elif loss_f == 'MAE':
-            loss = nn.L1Loss()(predictions, y)
-        else:
-            raise Exception('The specified loss function is not MSE nor MAE or you spelled it wrongly.\n\
-Set loss="MSE" for Mean Squared Error or loss="MAE" for Mean Absolut Error.')
+        # compute loss
+        loss = choose_loss(loss_f, predictions, y)
         
         losses.append(loss.cpu().detach())
         
@@ -130,17 +124,33 @@ def evaluation_conv_lstm(model, loader, device='cuda', loss_f='MSE'):
     
             predictions = obtain_predictions(model, x, device, sequence_length)
             
-            # MSE loss function
-            if loss_f == 'MSE':
-                loss = nn.MSELoss()(predictions, y)
-            elif loss_f == 'MAE':
-                loss = nn.L1Loss()(predictions, y)
-            else:
-                raise Exception('The specified loss function is not MSE nor MAE or you spelled it wrongly.\n\
-Set loss="MSE" for Mean Squared Error or loss="MAE" for Mean Absolut Error.')
+            # compute loss
+            loss = choose_loss(loss_f, predictions, y)
             
             losses.append(loss.cpu().detach())
 
     losses = np.array(losses).mean()
 
     return losses
+
+def choose_loss(loss_f, preds, targets):
+    '''
+    Function to specify the function to be used for computing the loss
+
+    Inputs: loss_f = str, key that specifies the function for computing the loss, 
+                     accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+                     default = 'MSE'
+            preds = torch.tensor, contains the predictions computed with the function "obtain_predictions"
+            targets = torch.tensor, contains the targets of the dataset
+
+    Output: loss = computed loss with the specified function between predictions and targets 
+    '''
+
+    if loss_f == 'MSE':
+        loss = nn.MSELoss()(preds, targets)
+    elif loss_f == 'MAE':
+        loss = nn.L1Loss()(preds, targets)
+    else: raise Exception('The specified loss function is not MSE nor MAE or you spelled it wrongly.\n\
+Set loss_f="MSE" for Mean Squared Error or loss_f="MAE" for Mean Absolut Error.')
+    
+    return loss
