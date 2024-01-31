@@ -1,16 +1,10 @@
 # .py file containing the functions used for data augmentation in ConvLSTM model for DSAIE FLOOD project.
 
-from PIL import Image
-import matplotlib.pyplot as plt
 import random
-import pandas as pd
-import os
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 import torch
-from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
-# from torchvision import tv_tensors
 from torchvision.transforms import v2 as transforms
 from torchvision.transforms.v2 import functional as F
 
@@ -19,28 +13,33 @@ fixed_angles = [0, 90, 180, 270]
 
 class MultiFixedRotation:
     '''
-    Class that implements random rotations of the dataset at fixed angles
+    Class for making random rotations of the dataset at fixed angles. If a list is given as input, the function randmoly choses
+    one single angle every time it is called.
+
+    Input: angles = single value or list of angles from which make a random choice
+           x = tensor to be rotated.
+
+    Output: rotated_dataset = tensor, dataset after rotation with random angle 
     '''
     def __init__(self, angles):
         self.angles = angles
 
     def __call__(self, x):
-        # random.seed(seed)
         angle = random.choice(self.angles)
-        return transforms.functional.rotate(x, angle)
+        rotated_dataset = transforms.functional.rotate(x, angle) 
+        return rotated_dataset
 
 def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     '''
-    Function for implementing data augmentation of inputs (DEM, X- and Y-Slope,
-    Water Depth, and Discharge).
+    Function for implementing data augmentation of the whole dataset (both inputs and outputs).
 
-    Input: train_dataset = torch tensor, dataset with input variables
-           seed = int, number for keeping the same random choice for trasforming both inputs and outputs in the same way, 
-                  default = 42 
-           angles = list of angle degrees for random rotation of the dataset, 
-                    default = 90°, 180°, 270°
-           p_hflip = float, probability of horizontal flipping
+    Input: train_dataset = torch tensor, dataset with inputs and targets
+           angles = list of angle degrees for random rotation of the dataset,
+                    default = 90°, 180°, 270° for keeping the characteristics of the dataset (boundary conditions, dimension etc.)
+           p_hflip = float, probability of horizontal flipping of the dataset,
                      default = 0.5 
+           full = key, to choose whether to return a new dataset concatenating the original and transformed one or not,
+                  default = True, the function returns the full new dataset   
            
     Output: transformed_dataset = new dataset with augmented data,
                                   if full = True returns the original and trasformed dataset concatenated together
@@ -50,7 +49,6 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     # transformation pipeline with horizontal flip
     transformation_pipeline = transforms.Compose([
         transforms.RandomHorizontalFlip(p=p_hflip)])  
-        # transforms.RandomVerticalFlip(p=p_hflip)
     
     # rotation with MultiFixedRotation class
     fixed_rotation = MultiFixedRotation(angles)
@@ -59,47 +57,50 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
 
     # initialize lists needed for looping   
     inputs = []
-    outputs = []
+    targets = []
 
     for idx in range(len(train_dataset)):
         inputs.append(train_dataset[idx][0])
-        outputs.append(train_dataset[idx][1])
+        targets.append(train_dataset[idx][1])
 
-    # get sizes of each dimension
+    # get sizes of inputs and targets
     inputs_sizes = train_dataset[0][0].shape
-    outputs_sizes = train_dataset[0][1].shape
-    print(f'Inputs sizes: {inputs_sizes},\nOutputs sizes: {outputs_sizes}\n')
+    targets_sizes = train_dataset[0][1].shape
+    print(f'Inputs sizes: {inputs_sizes},\nOutputs sizes: {targets_sizes}\n')
 
-    # stack lists
+    # stack lists to get tensors
     inputs_tensor = torch.stack(inputs)
-    outputs_tensor = torch.stack(outputs)
+    targets_tensor = torch.stack(targets)
 
-    # dimension of inputs channels over which concatentate 
-    # inputs_flat_dim = inputs_tensor.size()[2]
-    inputs_flat_dim = int(inputs_sizes[1])
-    # print(inputs_flat_dim)
+    # get dimension of inputs channels over which concatentate 
+    flat_dim = int(inputs_sizes[1])
 
-    flattened_inputs = inputs_tensor.flatten(0,1) #alternatively try .view(-1, 64, 64) 
-    flattened_outputs = outputs_tensor.flatten(1,2)
-    concat = torch.cat([flattened_inputs, flattened_outputs], dim=1)
-
-    transformed_concat = transformation_pipeline(concat)
-    # rotate_concat = fixed_rotation([i for i in transformed_concat])
+    # flatten the tensors before concatenating 
+    flattened_inputs = inputs_tensor.flatten(0,1) 
+    flattened_targets = targets_tensor.flatten(1,2)
     
-    #torch.tensor(i)
+    # concatenate flattened tensors over 2nd dimension
+    concat = torch.cat([flattened_inputs, flattened_targets], dim=1)
+
+    # transform the dataset - only flipping
+    transformed_concat = transformation_pipeline(concat)
+    
+    # apply rotation to each element: in this way the random angle of rotation changes every time  
     rotate_concat = [fixed_rotation(transforms.functional.rotate(i, random.choice(angles))) for i in transformed_concat]
+    
+    # stack the list to get a tensor 
     rotate_concat_tensor = torch.stack(rotate_concat)
     print(f'rotate concat: {type(rotate_concat_tensor)}')
 
     # reshape the tensors to original dimensions
-    transformed_inputs = rotate_concat_tensor[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
+    transformed_inputs = rotate_concat_tensor[:, :flat_dim, :, :].view(n_samples, inputs_sizes[0], 
                                                                            inputs_sizes[1], inputs_sizes[2], inputs_sizes[3]) 
-    transformed_outputs = rotate_concat_tensor[:, inputs_flat_dim:, :, :].view(n_samples, outputs_sizes[0], 
-                                                                           outputs_sizes[1], outputs_sizes[2], outputs_sizes[3])
+    transformed_targets = rotate_concat_tensor[:, flat_dim:, :, :].view(n_samples, targets_sizes[0], 
+                                                                           targets_sizes[1], targets_sizes[2], targets_sizes[3])
 
     # concatenate tensors
     all_inputs = torch.cat([inputs_tensor, transformed_inputs])
-    all_outputs = torch.cat([outputs_tensor, transformed_outputs])
+    all_outputs = torch.cat([targets_tensor, transformed_targets])
 
     # create Dataset type
     transformed_dataset = torch.utils.data.TensorDataset(all_inputs, all_outputs)
@@ -109,7 +110,7 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
 The samples in the dataset after augmentation are {len(transformed_dataset)}')
     
     if full==False:
-        transformed_dataset = torch.utils.data.TensorDataset(transformed_inputs, transformed_outputs)
+        transformed_dataset = torch.utils.data.TensorDataset(transformed_inputs, transformed_targets)
         warning_msg = (
 f'\nBe careful, you are not including the transformed dataset into the original one!\n\
 The samples in the dataset before augmentation were {len(train_dataset)}\n\
