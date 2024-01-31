@@ -68,7 +68,7 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
     # get sizes of each dimension
     inputs_sizes = train_dataset[0][0].shape
     outputs_sizes = train_dataset[0][1].shape
-    print(f'Inputs sizes: {inputs_sizes},\n\Outputs sizes: {outputs_sizes}\n')
+    print(f'Inputs sizes: {inputs_sizes},\nOutputs sizes: {outputs_sizes}\n')
 
     # stack lists
     inputs_tensor = torch.stack(inputs)
@@ -76,20 +76,26 @@ def augmentation(train_dataset, angles=[90,180,270], p_hflip=0.5, full=True):
 
     # dimension of inputs channels over which concatentate 
     # inputs_flat_dim = inputs_tensor.size()[2]
-    inputs_flat_dim = inputs_sizes[1]
+    inputs_flat_dim = int(inputs_sizes[1])
+    # print(inputs_flat_dim)
 
     flattened_inputs = inputs_tensor.flatten(0,1) #alternatively try .view(-1, 64, 64) 
     flattened_outputs = outputs_tensor.flatten(1,2)
     concat = torch.cat([flattened_inputs, flattened_outputs], dim=1)
 
     transformed_concat = transformation_pipeline(concat)
-    rotate_concat  =fixed_rotation([i for i in transformed_concat])
+    # rotate_concat = fixed_rotation([i for i in transformed_concat])
+    
+    #torch.tensor(i)
+    rotate_concat = [fixed_rotation(transforms.functional.rotate(i, random.choice(angles))) for i in transformed_concat]
+    rotate_concat_tensor = torch.stack(rotate_concat)
+    print(f'rotate concat: {type(rotate_concat_tensor)}')
 
     # reshape the tensors to original dimensions
-    transformed_inputs = rotate_concat[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
-                                                                            inputs_sizes[1], inputs_sizes[2], inputs_sizes[3]) 
-    transformed_outputs = rotate_concat[:, inputs_flat_dim:, :, :].view(n_samples, outputs_sizes[0], 
-                                                                            outputs_sizes[1], outputs_sizes[2], outputs_sizes[3])
+    transformed_inputs = rotate_concat_tensor[:, :inputs_flat_dim, :, :].view(n_samples, inputs_sizes[0], 
+                                                                           inputs_sizes[1], inputs_sizes[2], inputs_sizes[3]) 
+    transformed_outputs = rotate_concat_tensor[:, inputs_flat_dim:, :, :].view(n_samples, outputs_sizes[0], 
+                                                                           outputs_sizes[1], outputs_sizes[2], outputs_sizes[3])
 
     # concatenate tensors
     all_inputs = torch.cat([inputs_tensor, transformed_inputs])
