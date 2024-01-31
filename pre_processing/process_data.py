@@ -15,7 +15,7 @@ def process_elevation_data(file_id, train_val_test):
                             'dataset2' = test the model with dataset 2
                             'dataset3' = test the model with dataset 3
 
-    Output: elevation:slope_tensor = torch.Tensor, tensor combining the original 
+    Output: elevation_slope_tensor = torch.Tensor, tensor combining the original 
                                      elevation data and its slope in x and y directions.
     """
     try:
