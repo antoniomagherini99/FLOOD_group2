@@ -11,16 +11,21 @@ def scaler(train_dataset, scaler_type = MinMaxScaler()):
     '''
     Scaler function for the train dataset.
 
-    Inputs: train_datset = training and validation dataset
+    Inputs: train_datset = training dataset including inputs and targets
             scaler_type = scaler used for normalization, default = 'MinMaxScaler()'
     
-    Outputs: scaler_x, scaler_y = scalers after partial fit with train dataset 
+    Outputs: scaler_x, scaler_y = scalers after partial fit with train dataset for inputs and targets, respectively 
     '''
-    scaler_x =  copy.deepcopy(scaler_type) # required, otherwise scaler_y is the same as scaler_x
+
+    # required to avoid that scaler_y = scaler_x
+    scaler_x =  copy.deepcopy(scaler_type) 
     scaler_y =  copy.deepcopy(scaler_type)
-    
+
+    # get features of inputs and targets 
     in_fet = train_dataset[0][0].shape[1]
     tar_fet = train_dataset[0][1].shape[1]
+
+    # get scalers
     for idx in range(len(train_dataset)):
         scaler_x.partial_fit(train_dataset[idx][0].reshape(in_fet, -1).T.cpu())
         permute_tar = train_dataset[idx][1].permute(1, 0, 2, 3) # place features first to help with reshaping in next line
