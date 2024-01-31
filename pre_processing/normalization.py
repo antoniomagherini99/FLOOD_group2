@@ -33,51 +33,68 @@ def scaler(train_dataset, scaler_type = MinMaxScaler()):
     
     return scaler_x, scaler_y
 
-def normalize_dataset(dataset, scaler_x, scaler_y, train_val):
+def normalize_dataset(dataset, scaler_x, scaler_y, train_val_test):
     '''
     Function for normalizing every dataset. 
 
-    Inputs: dataset = dataset to be normalized
+    Inputs: dataset = dataset to be normalized, contains inputs and targets
             scaler_x, scaler_y = scalers for inputs and targets (water depth and discharge), created 
-                                            with the scaler function
-            train_val = str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
+                                 with the scaler function
+            train_val_test: key for specifying what we are using the model for
+                            'train_val' = train and validate the model
+                            'test1' = test the model with dataset 1
+                            'test2' = test the model with dataset 2
+                            'test3' = test the model with dataset 3
 
     Outputs: normalized_dataset = dataset after normalization 
     '''
+
+    # get length of simulations, pixels and inputs and targets features
     len_time = dataset[0][1].shape[0]
-    pixels = count_pixels(train_val)
+    pixels = count_pixels(train_val_test)
     input_features = dataset[0][0].shape[1]
     tar_features = dataset[0][1].shape[1]
     
-    
+    # initialize list for looping
     normalized_dataset = []
+
+    # normalize dataset by looping over all elements
     for idx in range(len(dataset)):
-        norm_x = torch.FloatTensor(scaler_x.transform(dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels))) # 1 time step
+        norm_x = torch.FloatTensor(scaler_x.transform(
+            dataset[idx][0][0].reshape(input_features, -1).T).T.reshape((1, input_features, pixels, pixels))) # 1 time step
         
         targets = dataset[idx][1]
         feature_first_tar = targets.permute(1, 0, 2, 3) # place features first
-        norm_y = torch.FloatTensor(scaler_y.transform(feature_first_tar.reshape(tar_features, -1).T).T.reshape(tar_features, len_time, pixels, pixels))
+        norm_y = torch.FloatTensor(scaler_y.transform(
+            feature_first_tar.reshape(tar_features, -1).T).T.reshape(tar_features, len_time, pixels, pixels))
         
         normalized_dataset.append((norm_x, norm_y.permute(1, 0, 2, 3))) # place time steps first
     
     return normalized_dataset
 
-def denormalize_dataset(inputs, outputs, train_val, scaler_x, scaler_y):
+def denormalize_dataset(inputs, outputs, train_val_test, scaler_x, scaler_y):
     '''
     Function for denormalizing the inputs and targets/outputs for a single sample. 
 
     Inputs: dataset = dataset to be normalized
-            train_val_test : str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
+            train_val_test: key for specifying what we are using the model for
+                            'train_val' = train and validate the model
+                            'test1' = test the model with dataset 1
+                            'test2' = test the model with dataset 2
+                            'test3' = test the model with dataset 3
             scaler_x, scaler_y = scalers for inputs and targets (water depth and discharge), created 
                                             with the scaler function
 
     Outputs: denormalized elevation, water_depth and discharge 
     '''
     
+    # get length of simulations, pixels and inputs and targets features
     len_time = outputs.shape[0]    
-    pixels = count_pixels(train_val)
+    pixels = count_pixels(train_val_test)
     input_features = inputs.shape[1]
     tar_features = outputs.shape[1]
+
+    # reorganize dimensions of dataset
     feature_first_output = outputs.permute(1, 0, 2, 3)
     
     # denormalize inputs and targets 
