@@ -7,7 +7,7 @@ import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
 from post_processing.metrics import confusion_mat
-from models.ConvLSTM_model.train_eval import obtain_predictions
+from models.ConvLSTM_model.train_eval import *
 
 def definitions(index):
     '''
@@ -149,7 +149,7 @@ def animated_plot(figure, animated_tensor, axis,
 
 def plot_animation(sample, dataset, model, train_val_test, scaler_x,
                    scaler_y, device='cuda', save=False,
-                   thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
+                   thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE'):
     '''
     Plot animation to visualize the evolution of certain variables over time.
     Assumes that the model can output water depth and discharge.
@@ -178,12 +178,16 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
         Device on which to perform the computations; 'cuda' is the default.
     save : bool
         Default is False. If True, will save the animation in the
-        post_processing folder with the file name:
-        'train_val_test + model_who + sample'.
+        post_processing folder with the title in the format:
+        'train_val + model_who + sample'.
     thresholds: torch.Tensor
         Denormalized thresholds for each feature. Expects a tensor that
         has shape: (1 x num_features).
         The default is torch.tensor([0.1, 0]).reshape(1, -1).
+    loss_f : str
+             key that specifies the function for computing the loss, 
+             accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+             default = 'MSE'
         
     Returns
     -------
@@ -228,10 +232,10 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     losses = np.zeros((features, time_steps)) # initialize empty array
     time_step_array = np.arange(1, time_steps + 1)
     
-    # Compute losses using MSELoss
+    # compute losses
     for step in range(time_steps):
         for feature in range(features):
-            losses[feature, step] = nn.MSELoss()(preds[step][feature], target[step][feature])
+            losses[feature, step] = choose_loss(loss_f(preds[step][feature], target[step][feature]))
     
     wd_label, _ = definitions(0)
     q_label, _ = definitions(1)

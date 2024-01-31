@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from models.ConvLSTM_model.train_eval import obtain_predictions
+from models.ConvLSTM_model.train_eval import *
 from post_processing.metrics import confusion_mat
 from pre_processing.normalization import *
 
@@ -34,7 +34,7 @@ def plot_losses(train_losses, validation_losses, model):
 
     return None
 
-def plot_test_loss(dataset, model, train_val, device):
+def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
     '''
     Plot test loss for each sample of the requested dataset and model
 
@@ -44,13 +44,12 @@ def plot_test_loss(dataset, model, train_val, device):
         Normalized dataset of train_val or test (1, 2, or 3).
     model : class of model
         Model to predict on the sample.
-    train_val : str
-        key for specifying what we are using the model for
-            'train_val' = train and validate the model
-            'test1' = test the model with dataset 1
-            'test2' = test the model with dataset 2
-            'test3' = test the model with dataset 3
-        Used in the title of the animation.
+    train_val_test: key for specifying what we are using the model for
+                            'train_val' = train and validate the model
+                            'test1' = test the model with dataset 1
+                            'test2' = test the model with dataset 2
+                            'test3' = test the model with dataset 3
+                    Used also in the title of the animation.
     device : str
         Device on which to perform the computations
 
@@ -61,38 +60,54 @@ def plot_test_loss(dataset, model, train_val, device):
     '''
     model_who = str(model.__class__.__name__)
     
+    # get number of samples and initialize loss list
     num_samples = len(dataset)
     sample_array = np.arange(0, num_samples)
     loss_sample = np.zeros((num_samples))
     
+    # make predictions for each sample
     for sample in range(num_samples):
         target = dataset[sample][1]
         time_steps = target.shape[0]
         preds = obtain_predictions(model, dataset[sample][0], device, time_steps)
         
-        loss_sample[sample] = nn.MSELoss()(preds, target)
+        loss_sample[sample] = choose_loss(loss_f, preds, target)
     
     plt.figure()
     plt.scatter(sample_array, loss_sample)
     plt.xticks(range(num_samples))
     plt.xlabel('Sample Number')
     plt.ylabel('Normalized Loss [-]')
-    plt.title(model_who + ': ' + train_val + ' losses for each sample')
+    plt.title(model_who + ': ' + train_val_test + ' losses for each sample')
     plt.grid()
     plt.show()
     
     return None
 
-def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
-                thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
+def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
+                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE'):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
-    of average loss (of Water Depth and Discharge)
+    of average loss (of Water Depth and Discharge), the relative Water Depth and 
+    Discharge loss and the relative Recall
 
     Input: dataset = tensor, normalized dataset
-           train_val_test : str, Identifier of dictionary. Expects: 'train_val', 'test1', 'test2', 'test3'.
+           model = trained AI model
+           train_val_test: key for specifying what we are using the model for
+                            'train_val' = train and validate the model
+                            'test1' = test the model with dataset 1
+                            'test2' = test the model with dataset 2
+                            'test3' = test the model with dataset 3
            scaler_x, scaler_y = scalers for inputs (x) and targets (water depth and discharge), created 
                                             with the scaler function 
+           device = device on which running the simulations, accepts 'cpu' or 'cuda'
+           thresholds: torch.tensor, Denormalized thresholds for each feature. Expects a tensor that 
+                        has shape: (1 x num_features). 
+                        default = 0.1 m
+           loss_f = str, key that specifies the function for computing the loss, 
+                    accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+                    default = 'MSE'
+                    
     Output: None (plot)
     '''
 
@@ -120,7 +135,7 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
 
     for i in range(n_samples):
         # denormalize elevation
-        elevation[i], _, _ = denormalize_dataset(inputs[i], targets[i], train_val,
+        elevation[i], _, _ = denormalize_dataset(inputs[i], targets[i], train_val_test,
                                                             scaler_x, scaler_y)
         # make predictions
         preds = obtain_predictions(model, inputs[i], device, time_steps)
@@ -128,7 +143,7 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     # compute MSE losses
     for feature in range(n_features):
             for i in range(n_samples):
-                 losses[i, feature] = nn.MSELoss()(preds[:][feature], targets[i][:][feature])
+                 losses[i, feature] = choose_loss(loss_f, preds[:][feature], targets[i][:][feature])
     
     # average over columns = features
     avg_loss = torch.mean(losses, dim=1)
@@ -169,25 +184,49 @@ def plot_sorted(dataset, model, train_val, scaler_x, scaler_y, device,
     fig.legend(bbox_to_anchor=(0.27, 0.67))
 
     axes[0].set_ylabel('Elevation [m]')
-    axes[1].set_ylabel('Water Depth loss [m]')
+    axes[1].set_ylabel(r'Water Depth loss [$m^2$]')
     ax1_2.set_ylabel(r'Discharge loss [$m^{3} s^{-1} m^{-1}$]')
     axes[2].set_ylabel('Recall [-]')
 
     axes[0].set_title('DEM elevation and variation')
     axes[1].set_title('MSE loss')
-    axes[2].set_title('Water Depth Recall')
+    axes[2].set_title(f'Water Depth Recall\n\
+with a minimum threshold of {thresholds[0,0]} m')
 
-    fig.suptitle(train_val + ': Peformance of ' + model_who + ' with respect to the variablity of the DEM', fontsize=15)
+    fig.suptitle(train_val_test + ': Peformance of ' + model_who + ' with respect to the variablity of the DEM', fontsize=15)
     plt.xlim(-1, n_samples+1)
     plt.show()
     return None
 
-def plot_metrics(dataset, model, train_val, scaler_y, device,
+def plot_metrics(dataset, model, train_val_test, scaler_y, device,
                  thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
+    '''
+    Function for plotting different metrics (recall, precision and F1-score)
+    
+    Inputs: dataset = TensorDataset, normalized dataset containing inputs and targets
+            model = trained AI model
+            train_val_test: key for specifying what we are using the model for
+                            'train_val' = train and validate the model
+                            'test1' = test the model with dataset 1
+                            'test2' = test the model with dataset 2
+                            'test3' = test the model with dataset 3
+            scaler_y = scaler of targets (water depth and discharge), created with the scaler function  
+            device = device on which running the simulations, accepts 'cpu' or 'cuda' 
+            thresholds: torch.tensor, Denormalized thresholds for each feature. Expects a tensor that 
+                        has shape: (1 x num_features). 
+                        default = 0.1 m
+
+    Outputs: None
+    '''
+
+    # get the model name
     model_who = str(model.__class__.__name__)
+
+    # compute metrics
     recall, accuracy, f1 = confusion_mat(dataset, model,
                                          scaler_y, device, thresholds)
     
+    # get number of samples
     num_samples = len(dataset)
     sample_array = np.arange(0, num_samples)
     
@@ -198,7 +237,7 @@ def plot_metrics(dataset, model, train_val, scaler_y, device,
     plt.xticks(range(num_samples))
     plt.xlabel('Sample Number')
     plt.ylabel('Score [-]')
-    plt.title(model_who + ': ' + train_val + ' metrics for each sample (WD only)')
+    plt.title(model_who + ': ' + train_val_test + ' metrics for each sample (WD only)')
     plt.legend()
     plt.grid()
     plt.show()
