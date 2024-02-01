@@ -244,9 +244,9 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     ax4.set_box_aspect(1)
     ax4.plot(time_step_array, losses[0], label = wd_label)
     ax4.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax4.set_title('Losses per Hour')
+    ax4.set_title(loss_f + ' per Hour')
     ax4.set_xlabel('Time steps, hours since breach')
-    ax4.set_ylabel('Normalized Loss [-]')
+    ax4.set_ylabel('Normalized ' + loss_f + ' [-]')
     ax4.legend()
     
     # Subplot 7
@@ -256,7 +256,8 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     ax7.set_box_aspect(1)
     ax7.plot(time_step_array, recall[0], label = wd_label)
     ax7.plot(time_step_array, recall[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax7.set_title('Recall per Hour')
+    ax7.set_title(f'Recall per Hour \n'+
+                  'threshold on WD: {threshold[0, 0]} m')
     ax7.set_xlabel('Time steps, hours since breach')
     ax7.set_ylabel('Recall [-]')
     ax7.legend()
