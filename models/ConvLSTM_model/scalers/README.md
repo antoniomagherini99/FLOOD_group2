@@ -1,1 +1,1 @@
-This folder contains the scalers that were saved during training. These scalers are used to normalize the input and output data of the test datasets.
+This folder contains the scalers of the ConvLSTM models that were created during the training process. These are used to normalize the input and output data of the test datasets.
