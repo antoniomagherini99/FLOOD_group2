@@ -439,3 +439,66 @@ Set both keys to "None" if you do not want to get the best or worst sample or sp
         raise TypeError('Variable "save" must be a boolean')
 
     return None
+
+def create_combined_gif(actual_array, predicted_array, difference_array,
+                        dem_map, title, dataset_name, save = False,
+                        figsize=(4, 4)):
+    """
+    Creates a combined GIF with DEM map and multiple subplots for
+    actual, predicted, and difference arrays.
+
+    Parameters:
+    - actual_array (numpy.ndarray): The actual data array.
+    - predicted_array (numpy.ndarray): The predicted data array.
+    - difference_array (numpy.ndarray): The difference data array.
+    - dem_map (numpy.ndarray): The DEM (Digital Elevation Map) array.
+    - title (str): Title for the GIF and subplots.
+    - dataset_name (str): Name of the dataset for saving the GIF file.
+    - save (bool): save the animation if True
+    - figsize (tuple): Figure size for subplots. Default is (4, 4).
+
+    Returns:
+    - str: Filename of the saved GIF.
+    """
+    time_steps = actual_array.shape[0]
+    fontsize = 10
+    # Creating subplots
+    fig, ((ax1, ax2, ax3, ax4)) = plt.subplots(1, 4, figsize=figsize)
+    
+    fig.subplots_adjust(wspace=0.5)  # Adjust the width space between subplots
+    
+    # Subplot 1
+    #plot_dem(fig, dem_map, boundary_condition, ax1, fontsize), require BC
+    
+    # Subplot 2
+    im2 = animated_plot(fig, actual_array, ax2, 'water_depth', fontsize)
+
+    # Subplot 3
+    im3 = animated_plot(fig, predicted_array, ax3, 'water_depth', fontsize, False, True)
+
+    # Subplot 4
+    im4 = animated_plot(fig, difference_array, ax4, 'water_depth', fontsize, True)
+
+    title_con = dataset_name + ' for sample {sample} using model: ' + 'CNN'
+    over_title = fig.suptitle('Hour 1: ' + title_con, fontsize=16) # try and update this to show the hour
+    def animate(step):
+        over_title.set_text(f'Hour {step + 1}: ' + title_con)
+        # Subplot 2
+        im2.set_data(actual_array[step])
+
+        # 3
+        im3.set_data(predicted_array[step])
+
+        # 4
+        im4.set_data(difference_array[step])
+
+    plt.tight_layout()    
+    ani = animation.FuncAnimation(fig, animate, frames = time_steps)
+    plt.show()
+
+    if save == True:
+        fps = int(time_steps / 10) # Change the fps based on the amount of time steps
+        ani.save('post_processing/' + dataset_name + '_CNN_' +
+                 '.gif', writer='Pillow', fps = fps)
+
+    return None
