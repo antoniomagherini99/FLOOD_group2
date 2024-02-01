@@ -37,7 +37,7 @@ class ConvLSTMCell(nn.Module):
                               padding=self.padding,
                               bias=self.bias)
         
-        init.orthogonal_(self.conv.weight) # better fit for tanh and sigmoid activations
+        init.orthogonal_(self.conv.weight) # better fit for rnn and lstms
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
@@ -182,6 +182,8 @@ class MultiStepConvLSTM(nn.Module):
             
             final_layer_output = torch.zeros((b, seq_len, self.output_dim, height, width))
             for t in range(seq_len):
+                # can add a relu activation function to ensure outputs are always positive (as this is expected)
+                # relu however makes the model harder to train as it can return zeros, resulting in no learning
                 final_layer_output[:, t] = self.conv2(layer_output_list[:, t]) # 1x1 kernel to reduce from hidden dim to number of outputs
 
         return final_layer_output
