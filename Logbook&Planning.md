@@ -242,4 +242,8 @@ Everyone: PP presentation, report, other to be discussed.
 
 31/01/24
 - Lucas and Antonio (8 h)
-1. Training ConvLSTM with augmentation
+1. Training ConvLSTM with augmentation, updates, documentation, cleaning up of folders and repository, presentation.
+
+01/02/24
+- Lucas and Antonio (8 h)
+1. Training ConvLSTM, final updates, documentation, cleaning up of folders and repository, presentation.
