@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import animation
 import torch
-import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
@@ -74,7 +73,8 @@ def animated_plot(figure, animated_tensor, axis,
     figure : instance of a figure class of matplotlib
         Figure used in the subplots
     animated_tensor : torch.tensor
-        Tensor that needs to be animated
+        Tensor that needs to be animated. Shape is (time_steps x num_features x
+        pixel x pixel) 
     axis : instance of an axes class of matplotlib
         Subplot that will contain the animated tensor
     variable : str
@@ -89,13 +89,6 @@ def animated_plot(figure, animated_tensor, axis,
         Identifier that defines whether the subplot is used for a prediction
         or a target.
         The default is False.
-
-    Raises
-    ------
-    Exception
-        Check "variable" input
-    TypeError
-        Check type of "prediction" and "diff" inputs.
 
     Returns
     -------
@@ -186,15 +179,17 @@ def plot_dem(figure, DEM, boundary_condition, axis, fontsize):
 
 def plot_loss_per_hour(targets, predictions, axis, loss_f, fontsize):
     '''
-    Plot the loss per hour based on the choice of loss function, sample and
-    model
+    Plot the loss per hour based on the choice of loss function, dataset, 
+    sample and model
 
     Parameters
     ----------
     targets : torch.Tensor
-        Targets of the datset
+        Targets of the sample of the datset. 
+        Shape is (time_steps x num_features x pixel x pixel)
     predictions : torch.Tensor
-        Predictions of the model
+        Predictions of the model for a sample.
+        Shape is (time_steps x num_features x pixel x pixel)
     axis : instance of an axes class of matplotlib
         Subplot that will contain the animated tensor
     loss_f : str
@@ -242,9 +237,10 @@ def plot_metric_per_hour(metric, targets, thresholds, axis, fontsize):
     ----------
     metric : torch.Tensor
         Options include recall, f1, and accuracy which can be calculated
-        from confusion mat function
+        from confusion mat function. Shape is (num_features x pixel x pixel)
     targets : torch.Tensor
-        Targets of the dataset
+        Targets of the dataset. Shape is (time_steps x num_features x pixel x 
+        pixel)
     thresholds: torch.Tensor
         Denormalized thresholds for each feature. Expects a tensor that
         has shape: (1 x num_features).
