@@ -253,7 +253,7 @@ Set both keys to "None" if you do not want to get the best or worst sample or sp
     im1 = ax1.imshow(elevation, cmap='terrain', origin='lower')
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
-    ax1.set_title('Elevation', fontsize = fontsize, fontweight='bold')
+    ax1.set_title('Elevation, X = Breach loc.', fontsize = fontsize, fontweight='bold')
     non_zero_indices = torch.nonzero(boundary_condition)
     non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
     ax1.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
