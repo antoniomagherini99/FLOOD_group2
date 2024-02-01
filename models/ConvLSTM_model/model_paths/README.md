@@ -1,0 +1,1 @@
+This folder contains the file paths of the ConvLSTM models that were created during the training process.
