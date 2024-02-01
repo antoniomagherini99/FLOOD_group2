@@ -1,36 +1,12 @@
-# ConvLSTM_pytorch
-**[This](https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py)** file **contains the implementation of Convolutional LSTM in PyTorch** made by [me](https://github.com/ndrplz) and [DavideA](https://github.com/DavideA).
+This folder contains the convlstm py file obtained from github.
+THis specific py file was modified (Antonio and Lucas) to produce predictions after each layer.
+A 1x1 kernel is used to reduce the hidden_dim to output_dim.
 
-We started from [this](https://github.com/rogertrullo/pytorch_convlstm/blob/master/conv_lstm.py) implementation and heavily refactored it add added features to match our needs.
+The multistep_convlstm (Lucas) py file is a copy of convlstm, but uses layers for all time steps.
+Residual connections were added.
+A 1x1 kernel is added for the final point wise sum.
+Different initialization were tested for the 1x1 kernel and the convolution layer.
+However, no significant improvements were noticed, but these were kept as it helped train the current best model.
 
-Please note that in this repository we implement the following dynamics:
-![CLSTM_dynamics](https://user-images.githubusercontent.com/7113894/59357391-15c73e00-8d2b-11e9-8234-9d51a90be5dc.png)
-
-which is a bit different from the one in the original [paper](https://arxiv.org/pdf/1506.04214.pdf).
-
-### How to Use
-The `ConvLSTM` module derives from `nn.Module` so it can be used as any other PyTorch module.
-
-The ConvLSTM class supports an arbitrary number of layers. In this case, it can be specified the hidden dimension (that is, the number of channels) and the kernel size of each layer. In the case more layers are present but a single value is provided, this is replicated for all the layers. For example, in the following snippet each of the three layers has a different hidden dimension but the same kernel size.
-
-Example usage:
-```
-model = ConvLSTM(input_dim=channels,
-                 hidden_dim=[64, 64, 128],
-                 kernel_size=(3, 3),
-                 num_layers=3,
-                 batch_first=True
-                 bias=True,
-                 return_all_layers=False)
-```
-
-### TODO (in progress...)
-- Comment code
-- Add docs
-- Add example usage on a toy problem
-- Implement stateful mechanism
-- ...
-
-### Disclaimer
-
-This is still a work in progress and is far from being perfect: if you find any bug please don't hesitate to open an issue.
+A relu can be placed on the output of both models, but it was noticed that it sometimes made it
+harder for the model to train as it could output zeros for all timesteps. 
