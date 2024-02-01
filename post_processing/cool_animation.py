@@ -213,7 +213,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     fontsize = 10
 
     if best_worst != 'None' and loss_recall != 'None':
-         sorted_indexes, _, _ = get_indexes(dataset, model, train_val_test, 
+         sorted_indexes, _, _, _ = get_indexes(dataset, model, train_val_test, 
                                             scaler_x, scaler_y, device, thresholds, 
                                             loss_f, loss_recall)
          # get best or worst model
@@ -221,7 +221,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
              sample = sorted_indexes[-1]
          elif best_worst == 'worst':
              sample = sorted_indexes[1]
-    elif (best_worst != 'None' and loss_recall == 'None') or (best_worst == 'None' or loss_recall != 'None'):
+    elif (best_worst != 'None' and loss_recall == 'None') or (best_worst == 'None' and loss_recall != 'None'):
         raise Exception(f'Wrong keys specified!\n\
 You set "best_worst" = {best_worst} and "loss_recall" = {loss_recall}, while both need to be either "None" or specified with their relative arguments.\n\
 Set both keys to "None" if you do not want to get the best or worst sample or specify the wrong key with the accepted arguments.')

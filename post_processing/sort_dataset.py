@@ -51,7 +51,6 @@ def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y,
 
     # get inputs and outputs
     # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
-    model_who = str(model.__class__.__name__)
     n_samples = len(dataset)
     n_features = dataset[0][1].shape[1]
     n_pixels = dataset[0][1].shape[-1]
@@ -82,16 +81,15 @@ def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y,
     for feature in range(n_features):
             for i in range(n_samples):
                  losses[i, feature] = choose_loss(loss_f, preds[:][feature], targets[i][:][feature])
-    
-    # average over columns = features
-    avg_loss = torch.mean(losses, dim=1)
 
     recall, _, _ = confusion_mat(dataset, model, scaler_y, device, thresholds)
 
     # sorting dataset
     if loss_recall == 'loss':
+         # average over columns = features
+         avg_loss = torch.mean(losses, dim=1)
          _, sorted_indexes = torch.sort(avg_loss)
     elif loss_recall == 'recall':
          _, sorted_indexes = torch.sort(recall, descending=True)
 
-    return sorted_indexes, losses, recall
+    return sorted_indexes, elevation, losses, recall
