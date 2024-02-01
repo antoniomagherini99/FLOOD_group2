@@ -64,7 +64,7 @@ def find_axes(axis):
     return cax
 
 def animated_plot(figure, animated_tensor, axis,
-                  variable, diff = False, prediction = False):
+                  variable, fontsize, diff = False, prediction = False):
     '''
     Function used to generalise animated plots
 
@@ -79,6 +79,8 @@ def animated_plot(figure, animated_tensor, axis,
     variable : str
         Name of variable that will be animated
         Two options available: "water_depth" and "discharge"
+    fontsize: int
+        Sets the fontsize of the title
     diff : bool, optional
         Identifier that defines whether the subplot is used for a difference.
         The default is False.
@@ -130,7 +132,7 @@ def animated_plot(figure, animated_tensor, axis,
     image = axis.imshow(animated_tensor[0], cmap=cmap, origin='lower')
     cb = figure.colorbar(image, cax=cax)
     cb.set_label(label)
-    axis.set_title(title)
+    axis.set_title(title, fontsize = fontsize, fontweight='bold')
     # set color bar limits
     min_val = animated_tensor.min()
     max_val = animated_tensor.max()
@@ -193,7 +195,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     -------
     None.
     '''
-
+    fontsize = 10
     # Extracting information from the dataset
     input = dataset[sample][0]
     target = dataset[sample][1]
@@ -221,7 +223,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     im1 = ax1.imshow(elevation, cmap='terrain', origin='lower')
     cb1 = fig.colorbar(im1, cax=cax1)
     cb1.set_label(r'$m$')
-    ax1.set_title('Elevation')
+    ax1.set_title('Elevation', fontsize = fontsize, fontweight='bold')
     non_zero_indices = torch.nonzero(boundary_condition)
     non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
     ax1.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
@@ -244,7 +246,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     ax4.set_box_aspect(1)
     ax4.plot(time_step_array, losses[0], label = wd_label)
     ax4.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax4.set_title(loss_f + ' per Hour')
+    ax4.set_title(loss_f + ' per Hour', fontsize = fontsize, fontweight='bold')
     ax4.set_xlabel('Time steps, hours since breach')
     ax4.set_ylabel('Normalized ' + loss_f + ' [-]')
     ax4.legend()
@@ -256,31 +258,30 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     ax7.set_box_aspect(1)
     ax7.plot(time_step_array, recall[0], label = wd_label)
     ax7.plot(time_step_array, recall[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax7.set_title(f'Recall per Hour \n'+
-                  'threshold on WD: {threshold[0, 0]} m')
+    ax7.set_title(f'Recall/Hour with WD > {thresholds[0, 0]:.2f} m', fontsize = fontsize, fontweight='bold')
     ax7.set_xlabel('Time steps, hours since breach')
     ax7.set_ylabel('Recall [-]')
     ax7.legend()
 
     # Subplot 2
-    im2 = animated_plot(fig, water_depth, ax2, 'water_depth')
+    im2 = animated_plot(fig, water_depth, ax2, 'water_depth', fontsize)
 
     # Subplot 3
-    im3 = animated_plot(fig, discharge, ax3, 'discharge')
+    im3 = animated_plot(fig, discharge, ax3, 'discharge', fontsize)
 
     # Subplot 5
-    im5 = animated_plot(fig, wd_pred, ax5, 'water_depth', False, True)
+    im5 = animated_plot(fig, wd_pred, ax5, 'water_depth', fontsize, False, True)
 
     # Subplot 6
-    im6 = animated_plot(fig, q_pred, ax6, 'discharge', False, True)
+    im6 = animated_plot(fig, q_pred, ax6, 'discharge', fontsize, False, True)
 
     # Subplot 8
     diff_wd = wd_pred - water_depth
-    im8 = animated_plot(fig, diff_wd, ax8, 'water_depth', True)
+    im8 = animated_plot(fig, diff_wd, ax8, 'water_depth', fontsize, True)
 
     # Subplot 9
     diff_q = q_pred - discharge
-    im9 = animated_plot(fig, diff_q, ax9, 'discharge', True)
+    im9 = animated_plot(fig, diff_q, ax9, 'discharge', fontsize, True)
 
     title_con = train_val_test + f' for sample {sample} using model: ' + model_who
     over_title = fig.suptitle('Hour 1: ' + title_con, fontsize=16) # try and update this to show the hour
@@ -310,8 +311,9 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     plt.show()
 
     if save == True:
+        fps = int(time_steps / 10) # Change the fps based on the amount of time steps
         ani.save('post_processing/' + train_val_test + '_' + model_who + '_' +
-                 str(sample) + '.gif', writer='Pillow', fps=5)
+                 str(sample) + '.gif', writer='Pillow', fps = fps)
     elif save == False:
         None
     else:
