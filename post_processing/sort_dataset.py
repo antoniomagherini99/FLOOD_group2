@@ -35,10 +35,9 @@ def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y,
                     accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
                     default = 'MSE'
            loss_recall : srt,
-                  if best_worst is not None this specifies if samples are sorted 
-                  based on average loss or recall. 
+                  specifies if samples are sorted based on average loss or recall. 
                   Expects 'None', 'loss' or 'recall'.
-                  default = 'None'
+                  default = 'loss'
                     
     Output: None (plot)
     '''

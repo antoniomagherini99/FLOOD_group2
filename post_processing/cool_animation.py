@@ -215,7 +215,7 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
     if best_worst != 'None' and loss_recall != 'None':
          sorted_indexes, _, _, _ = get_indexes(dataset, model, train_val_test, 
                                             scaler_x, scaler_y, device, thresholds, 
-                                            loss_f, loss_recall)
+                                            loss_f, loss_recall=loss_recall)
          # get best or worst model
          if best_worst == 'best':
              sample = sorted_indexes[-1]

@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from models.ConvLSTM_model.train_eval import *
 from post_processing.metrics import confusion_mat
+from post_processing.sort_dataset import *
 from pre_processing.normalization import *
 from post_processing.cool_animation import *
 
@@ -86,7 +87,7 @@ def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
     return None
 
 def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
-                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE'):
+                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE', loss_recall='None'):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge), the relative Water Depth and 
@@ -108,51 +109,23 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
            loss_f = str, key that specifies the function for computing the loss, 
                     accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
                     default = 'MSE'
+           loss_recall : srt,
+                  if best_worst is not None this specifies if samples are sorted 
+                  based on average loss or recall. 
+                  Expects 'None', 'loss' or 'recall'.
+                  default = 'None'
                     
     Output: None (plot)
     '''
-
-    # get inputs and outputs
-    # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
     model_who = str(model.__class__.__name__)
     n_samples = len(dataset)
-    n_features = dataset[0][1].shape[1]
-    n_pixels = dataset[0][1].shape[-1]
-    time_steps = dataset[0][1].shape[0]
-    
-    # initialize inputs and outputs
-    inputs = []
-    targets = []
-    
-    for i in range(n_samples):
-        inputs.append(dataset[i][0])
-        targets.append(dataset[i][1])
+    # n_features = dataset[0][1].shape[1]
+    # n_pixels = dataset[0][1].shape[-1]
+    # time_steps = dataset[0][1].shape[0]
 
-    # initialize denormalization of dataset
-    elevation = np.zeros((n_samples, n_pixels, n_pixels))
-
-    # initialize losses
-    losses = torch.zeros((n_samples, n_features))
-
-    for i in range(n_samples):
-        # denormalize elevation
-        elevation[i], _, _ = denormalize_dataset(inputs[i], targets[i], train_val_test,
-                                                            scaler_x, scaler_y)
-        # make predictions
-        preds = obtain_predictions(model, inputs[i], device, time_steps)
-
-    # compute MSE losses
-    for feature in range(n_features):
-            for i in range(n_samples):
-                 losses[i, feature] = choose_loss(loss_f, preds[:][feature], targets[i][:][feature])
-    
-    # average over columns = features
-    avg_loss = torch.mean(losses, dim=1)
-
-    recall, _, _ = confusion_mat(dataset, model, scaler_y, device, thresholds)
-
-    # sorting dataset
-    _, sorted_indexes = torch.sort(avg_loss)
+    sorted_indexes, elevation, losses, recall = get_indexes(
+          dataset, model, train_val_test, scaler_x, scaler_y, 
+          device, thresholds, loss_f, loss_recall)
     
     sorted_loss = losses[sorted_indexes, :]
     denorm_loss = scaler_y.inverse_transform(sorted_loss) # Loss now contains units
@@ -197,7 +170,7 @@ with a minimum threshold of {thresholds[0,0]:.2f} m')
     fig.suptitle(train_val_test + ': Peformance of ' + model_who + ' with respect to the variablity of the DEM', fontsize=15)
     plt.xlim(-1, n_samples+1)
     plt.show()
-    return None
+    return None 
 
 def plot_metrics(dataset, model, train_val_test, scaler_y, device,
                  thresholds = torch.tensor([0.1, 0]).reshape(1, -1)):
@@ -242,7 +215,7 @@ def plot_metrics(dataset, model, train_val_test, scaler_y, device,
     plt.legend()
     plt.grid()
     plt.show()
-    return None
+    return None 
 
 def plot_best_worst(dataset, model, train_val_test, scaler_x, scaler_y, device,
                     thresholds = torch.tensor([0.1, 0]).reshape(1, -1), 
@@ -275,7 +248,7 @@ def plot_best_worst(dataset, model, train_val_test, scaler_x, scaler_y, device,
                     
     Output: None (plot)
     '''
-        # get inputs and outputs
+    # get inputs and outputs
     # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
     model_who = str(model.__class__.__name__)
     n_samples = len(dataset)
