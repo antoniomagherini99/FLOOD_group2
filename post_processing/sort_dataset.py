@@ -10,9 +10,9 @@ from post_processing.metrics import confusion_mat
 from pre_processing.normalization import *
 from post_processing.cool_animation import *
 
-def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y, device,
-                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE', 
-                best_worst='best', loss_recall='loss'):
+def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y, 
+                device, thresholds = torch.tensor([0.1, 0]).reshape(1, -1), 
+                loss_f = 'MSE', loss_recall='loss'):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge), the relative Water Depth and 
