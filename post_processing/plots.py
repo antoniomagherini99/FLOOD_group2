@@ -10,7 +10,7 @@ from post_processing.metrics import confusion_mat
 from pre_processing.normalization import *
 from post_processing.cool_animation import *
 
-def plot_losses(train_losses, validation_losses, model):
+def plot_losses(train_losses, validation_losses, model, loss_f = 'MSE'):
     '''
     Function for plotting the training and validation losses of CNN and ConvLSTM models.
     y-axis is in log-scale. 
@@ -18,6 +18,10 @@ def plot_losses(train_losses, validation_losses, model):
     Inputs: train_losses = list containing training losses throughout epochs
             validation_losses =  list containing validation losses throughout epochs
             model used for training
+    loss_f : str
+             key that specifies the function for computing the loss, 
+             accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+             default = 'MSE'
 
     Outputs: None 
     '''
@@ -26,9 +30,9 @@ def plot_losses(train_losses, validation_losses, model):
     plt.plot(train_losses, color='blue', ls='--', label='Training')
     plt.plot(validation_losses, color='red', ls='--', label='Validation')
     plt.yscale('log')
-    plt.title(model_who + ' training and validation losses')
+    plt.title(model_who + ' training and validation ' + loss_f)
     plt.xlabel('Epochs [-]')
-    plt.ylabel('Normalized Loss [-]')
+    plt.ylabel('Normalized ' + loss_f + ' [-]')
     plt.gca().yaxis.set_label_coords(-0.01, 0.5)
     plt.legend()
     plt.show()
@@ -53,6 +57,10 @@ def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
                     Used also in the title of the animation.
     device : str
         Device on which to perform the computations
+    loss_f : str
+             key that specifies the function for computing the loss, 
+             accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
+             default = 'MSE'
 
     Returns
     -------
@@ -78,8 +86,8 @@ def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
     plt.scatter(sample_array, loss_sample)
     plt.xticks(range(num_samples))
     plt.xlabel('Sample Number')
-    plt.ylabel('Normalized Loss [-]')
-    plt.title(model_who + ': ' + train_val_test + ' losses for each sample')
+    plt.ylabel('Normalized '+ loss_f + ' [-]')
+    plt.title(model_who + ': ' + train_val_test + ' ' + loss_f + ' for each sample')
     plt.grid()
     plt.show()
     
@@ -178,19 +186,25 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
 
     labels = np.array([sorted_indexes[i] for i in sorted_indexes])
     
+    # since MSE is not square rooted we need to be correct with out units when denormalizing
+    if loss_f == 'MAE':
+        squared = ''
+    elif loss_f == 'MSE':
+        squared = r'$^2$'
+    
     for ax in axes:
         ax.set_xlabel('Sample ID')
         ax.set_xticks(sorted_indexes, labels, rotation=45, ha='right')
         
-    fig.legend(bbox_to_anchor=(0.27, 0.67))
+    fig.legend(bbox_to_anchor=(0.27, 0.39))
 
     axes[0].set_ylabel('Elevation [m]')
-    axes[1].set_ylabel(r'Water Depth loss [$m^2$]')
-    ax1_2.set_ylabel(r'Discharge loss [$m^{3} s^{-1} m^{-1}$]')
+    axes[1].set_ylabel(r'Water Depth loss $[m]$' + squared)
+    ax1_2.set_ylabel(r'Discharge loss $[m^{3} s^{-1} m^{-1}]$' + squared)
     axes[2].set_ylabel('Recall [-]')
 
     axes[0].set_title('DEM elevation and variation')
-    axes[1].set_title('MSE loss')
+    axes[1].set_title(loss_f)
     axes[2].set_title(f'Water Depth Recall\n\
 with a minimum threshold of {thresholds[0,0]:.2f} m')
 
@@ -242,103 +256,4 @@ def plot_metrics(dataset, model, train_val_test, scaler_y, device,
     plt.legend()
     plt.grid()
     plt.show()
-    return None
-
-def plot_best_worst(dataset, model, train_val_test, scaler_x, scaler_y, device,
-                    thresholds = torch.tensor([0.1, 0]).reshape(1, -1), 
-                    loss_f = 'MSE', best_worst='best', loss_recall='loss', save=False):
-    '''
-       Function for plotting the best and worst samples. 
-       The definition of best and worst is based on the value of the average loss (between Water Depth and Discharge)
-       and the value of computed recall for a specific dataset.
-       
-       Function for plotting the DEMs variation sorted in increasing order 
-       of average loss (of Water Depth and Discharge), the relative Water Depth and 
-       Discharge loss and the relative Recall
-
-       Input: dataset = tensor, normalized dataset
-           model = trained AI model
-           train_val_test: key for specifying what we are using the model for
-                            'train_val' = train and validate the model
-                            'test1' = test the model with dataset 1
-                            'test2' = test the model with dataset 2
-                            'test3' = test the model with dataset 3
-           scaler_x, scaler_y = scalers for inputs (x) and targets (water depth and discharge), created 
-                                            with the scaler function 
-           device = device on which running the simulations, accepts 'cpu' or 'cuda'
-           thresholds: torch.tensor, Denormalized thresholds for each feature. Expects a tensor that 
-                        has shape: (1 x num_features). 
-                        default = 0.1 m
-           loss_f = str, key that specifies the function for computing the loss, 
-                    accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
-                    default = 'MSE'
-                    
-    Output: None (plot)
-    '''
-        # get inputs and outputs
-    # 1st sample, 2nd input(0)/target(1), 3rd time step, 4th features, 5th/6th pixels
-    model_who = str(model.__class__.__name__)
-    n_samples = len(dataset)
-    n_features = dataset[0][1].shape[1]
-    n_pixels = dataset[0][1].shape[-1]
-    time_steps = dataset[0][1].shape[0]
-    
-    # initialize inputs and outputs
-    inputs = []
-    targets = []
-    
-    for i in range(n_samples):
-        inputs.append(dataset[i][0])
-        targets.append(dataset[i][1])
-
-    # initialize denormalization of dataset
-    elevation = np.zeros((n_samples, n_pixels, n_pixels))
-
-    # initialize losses
-    losses = torch.zeros((n_samples, n_features))
-
-    for i in range(n_samples):
-        # denormalize elevation
-        elevation[i], _, _ = denormalize_dataset(inputs[i], targets[i], train_val_test,
-                                                            scaler_x, scaler_y)
-        # make predictions
-        preds = obtain_predictions(model, inputs[i], device, time_steps)
-
-    # compute MSE losses
-    for feature in range(n_features):
-            for i in range(n_samples):
-                 losses[i, feature] = choose_loss(loss_f, preds[:][feature], targets[i][:][feature])
-    
-    # average over columns = features
-    avg_loss = torch.mean(losses, dim=1)
-
-    recall, _, _ = confusion_mat(dataset, model, scaler_y, device, thresholds)
-
-    # sorting dataset
-    if loss_recall == 'loss':
-         _, sorted_indexes = torch.sort(avg_loss)
-    elif loss_recall == 'recall':
-         _, sorted_indexes = torch.sort(recall)
-    
-    sorted_loss = losses[sorted_indexes, :]
-    denorm_loss = scaler_y.inverse_transform(sorted_loss) # Loss now contains units
-    
-    elevation_sorted = elevation[sorted_indexes]
-    elev_sorted_tensor = torch.Tensor(elevation_sorted)
-    
-    sorted_recall = recall[sorted_indexes]
-    
-    # get best or worst model
-    if best_worst == 'best':
-         idx = -1
-    elif best_worst == 'worst':
-         idx = 1
-    
-    if loss_recall == 'loss':
-         value = sorted_loss[idx]
-    elif loss_recall == 'recall':
-         value = sorted_recall[idx]
-
-    plot_animation(idx, dataset, model, train_val_test, scaler_x,
-                   scaler_y, device, save, thresholds, loss_f)
     return None
