@@ -254,7 +254,7 @@ def create_combined_gif(actual_array, predicted_array, difference_array, dem_map
     Returns:
     - str: Filename of the saved GIF.
     """
-
+    colormaps = ['terrain', 'coolwarm', 'coolwarm', 'Blues']
     # Calculate the constant min and max values for the color scale
     min_value = min(difference_array.min(), 0)  # Minimum value set to 0
     max_value = max(actual_array.max(), predicted_array.max(), difference_array.max())
