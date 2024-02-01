@@ -5,6 +5,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+import os
+import io
+import imageio.v2 as imageio 
+
 from models.ConvLSTM_model.train_eval import *
 from post_processing.metrics import confusion_mat
 from post_processing.sort_dataset import *
@@ -230,3 +234,70 @@ def plot_metrics(dataset, model, train_val_test, scaler_y, device,
     plt.grid()
     plt.show()
     return None
+
+
+def create_combined_gif(actual_array, predicted_array, difference_array, dem_map, title, dataset_name, cmap='Blues', loop=0, figsize=(4, 4)):
+    """
+    Creates a combined GIF with DEM map and multiple subplots for actual, predicted, and difference arrays.
+
+    Parameters:
+    - actual_array (numpy.ndarray): The actual data array.
+    - predicted_array (numpy.ndarray): The predicted data array.
+    - difference_array (numpy.ndarray): The difference data array.
+    - dem_map (numpy.ndarray): The DEM (Digital Elevation Map) array.
+    - title (str): Title for the GIF and subplots.
+    - dataset_name (str): Name of the dataset for saving the GIF file.
+    - cmap (str): Colormap for actual and predicted arrays. Default is 'Blues'.
+    - loop (int): Number of times to loop the GIF. Default is 0 (no loop).
+    - figsize (tuple): Figure size for subplots. Default is (4, 4).
+
+    Returns:
+    - str: Filename of the saved GIF.
+    """
+
+    # Calculate the constant min and max values for the color scale
+    min_value = min(difference_array.min(), 0)  # Minimum value set to 0
+    max_value = max(actual_array.max(), predicted_array.max(), difference_array.max())
+
+    images = []
+    for t in range(actual_array.shape[0]):
+        fig, axs = plt.subplots(1, 4, figsize=(4 * figsize[0], figsize[1]))  # Create four subplots side by side
+        im_dem = axs[0].imshow(dem_map, cmap=colormaps[0], origin='lower', vmin=min_value, vmax=max_value)  # Display DEM map
+        im_actual = axs[1].imshow(actual_array[t], cmap=cmap, origin='lower', vmin=0, vmax=max_value)  # Start from 0 as white
+        im_predicted = axs[2].imshow(predicted_array[t], cmap=cmap, origin='lower', vmin=0, vmax=max_value)  # Start from 0 as white  
+
+        # changed im_difference to make sure the scale is symmetric around zero
+        im_difference = axs[3].imshow(difference_array[t], cmap='seismic', origin='lower', vmin=-max_value, vmax=max_value)  # Using a specific colormap for difference
+
+        fig.colorbar(im_dem, ax=axs[0], fraction=0.046, pad=0.04)
+        fig.colorbar(im_actual, ax=axs[1], fraction=0.046, pad=0.04)
+        fig.colorbar(im_predicted, ax=axs[2], fraction=0.046, pad=0.04)
+        fig.colorbar(im_difference, ax=axs[3], fraction=0.046, pad=0.04)
+
+        axs[0].set_title('DEM Map')  # Title for DEM map
+        axs[1].set_title(f"Actual {title} {t+1}")
+        axs[2].set_title(f"Predicted {title} {t+1}")
+        axs[3].set_title(f"Difference {title} {t+1}")
+
+        for ax in axs:
+            ax.axis('off')
+
+        plt.tight_layout()
+
+        # Convert the figure to an image in memory
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        images.append(imageio.imread(buf))
+        plt.close()
+
+    # Specify the folder for saving the GIF
+    save_folder = 'post_processing'
+    os.makedirs(save_folder, exist_ok=True)  # Create the folder if it doesn't exist
+
+    gif_filename = os.path.join(save_folder, f'combined_{title.replace(" ", "_").lower()}_{dataset_name}.gif')
+    with imageio.get_writer(gif_filename, mode='I', loop=loop) as writer:
+        for image in images:
+            writer.append_data(image)
+
+    return gif_filename
