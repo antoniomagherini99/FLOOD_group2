@@ -34,12 +34,6 @@ def get_indexes(dataset, model, train_val_test, scaler_x, scaler_y,
            loss_f = str, key that specifies the function for computing the loss, 
                     accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
                     default = 'MSE'
-           best_worst : str,
-                 key that specifies which sample to plot. Expects 'None', 'best', 'worst'.
-                 If set to 'best' it plots the sample with the best performances, 
-                 if set to 'worst' the one with worst performances 
-                 based on the parameter specified with the 'loss_recall' key.
-                 default = 'None'
            loss_recall : srt,
                   if best_worst is not None this specifies if samples are sorted 
                   based on average loss or recall. 
