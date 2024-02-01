@@ -149,6 +149,40 @@ def animated_plot(figure, animated_tensor, axis,
     image.set_clim(min_val, max_val)
     return image
 
+def plot_dem(figure, DEM, boundary_condition, axis, fontsize):
+    '''
+    Plot the elevation with the location of the boundary condition as an x.
+
+    Parameters
+    ----------
+    figure : instance of a figure class of matplotlib
+        Figure used in the subplots
+    DEM : torch.Tensor
+        pixel x pixel tensor containing the elevation of the sample
+    boundary_condition : torch.Tensor
+        pixel x pixel tensor containing the location of the boundary condition
+        of the sample
+    axis : instance of an axes class of matplotlib
+        Subplot that will contain the animated tensor
+    fontsize: int
+        Sets the fontsize of the title
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    cax = find_axes(axis)
+    image = axis.imshow(DEM, cmap='terrain', origin='lower')
+    cb = figure.colorbar(image, cax=cax)
+    cb.set_label(r'$m$')
+    axis.set_title('Elevation, X = Breach loc.', fontsize = fontsize, fontweight='bold')
+    non_zero_indices = torch.nonzero(boundary_condition)
+    non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
+    axis.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
+                clip_on = False, clip_box = plt.gca().transData)
+    return None
 
 def plot_animation(sample, dataset, model, train_val_test, scaler_x,
                    scaler_y, device='cuda', save=False,
@@ -249,15 +283,7 @@ Set both keys to "None" if you do not want to get the best or worst sample or sp
     fig.subplots_adjust(wspace=0.5)  # Adjust the width space between subplots
 
     # Subplot 1
-    cax1 = find_axes(ax1)
-    im1 = ax1.imshow(elevation, cmap='terrain', origin='lower')
-    cb1 = fig.colorbar(im1, cax=cax1)
-    cb1.set_label(r'$m$')
-    ax1.set_title('Elevation, X = Breach loc.', fontsize = fontsize, fontweight='bold')
-    non_zero_indices = torch.nonzero(boundary_condition)
-    non_zero_row, non_zero_col = non_zero_indices[0][0].item(), non_zero_indices[0][1].item()
-    ax1.scatter(non_zero_col, non_zero_row, color='k', marker='x', s=100,
-                clip_on = False, clip_box = plt.gca().transData)
+    plot_dem(fig, elevation, boundary_condition, ax1, fontsize)
 
     # Subplot 4
     features = target.shape[1]
