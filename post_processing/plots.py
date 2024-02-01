@@ -95,7 +95,7 @@ def plot_test_loss(dataset, model, train_val_test, device, loss_f='MSE'):
     return None
 
 def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
-                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE', loss_recall='None'):
+                thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE', loss_recall='loss'):
     '''
     Function for plotting the DEMs variation sorted in increasing order 
     of average loss (of Water Depth and Discharge), the relative Water Depth and 
@@ -121,7 +121,7 @@ def plot_sorted(dataset, model, train_val_test, scaler_x, scaler_y, device,
                   if best_worst is not None this specifies if samples are sorted 
                   based on average loss or recall. 
                   Expects 'None', 'loss' or 'recall'.
-                  default = 'None'
+                  default = 'loss'
                     
     Output: None (plot)
     '''
