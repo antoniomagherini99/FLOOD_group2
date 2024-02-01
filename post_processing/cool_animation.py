@@ -6,6 +6,7 @@ import torch.nn as nn
 import numpy as np
 
 from pre_processing.normalization import denormalize_dataset
+from post_processing.sort_dataset import * 
 from post_processing.metrics import confusion_mat
 from models.ConvLSTM_model.train_eval import *
 
@@ -149,7 +150,8 @@ def animated_plot(figure, animated_tensor, axis,
 
 def plot_animation(sample, dataset, model, train_val_test, scaler_x,
                    scaler_y, device='cuda', save=False,
-                   thresholds = torch.tensor([0.1, 0]).reshape(1, -1), loss_f = 'MSE'):
+                   thresholds = torch.tensor([0.1, 0]).reshape(1, -1), 
+                   loss_f = 'MSE', best_worst='None', loss_recall='None'):
     '''
     Plot animation to visualize the evolution of certain variables over time.
     Assumes that the model can output water depth and discharge.
@@ -188,12 +190,37 @@ def plot_animation(sample, dataset, model, train_val_test, scaler_x,
              key that specifies the function for computing the loss, 
              accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception
              default = 'MSE'
-        
+    best_worst : str,
+                 key that specifies which sample to plot. Expects 'None', 'best', 'worst'.
+                 If set to 'best' it plots the sample with the best performances, 
+                 if set to 'worst' the one with worst performances 
+                 based on the parameter specified with the 'loss_recall' key.
+                 default = 'None'
+    loss_recall : srt,
+                  if best_worst is not None this specifies if samples are sorted 
+                  based on average loss or recall. 
+                  Expects 'None', 'loss' or 'recall'.
+                  default = 'None'
+
     Returns
     -------
     None.
     '''
 
+    if best_worst != 'None' and loss_recall != 'None':
+         sorted_indexes, _, _ = get_indexes(dataset, model, train_val_test, 
+                                            scaler_x, scaler_y, device, thresholds, 
+                                            loss_f, best_worst, loss_recall)
+         # get best or worst model
+         if best_worst == 'best':
+             sample = sorted_indexes[-1]
+         elif best_worst == 'worst':
+             sample = sorted_indexes[1]
+    elif (best_worst != 'None' and loss_recall == 'None') or (best_worst == 'None' or loss_recall != 'None'):
+        raise Exception(f'Wrong keys specified!\n\
+You set "best_worst" = {best_worst} and "loss_recall" = {loss_recall}, while both need to be either "None" or specified with their relative arguments.\n\
+Set both keys to "None" if you do not want to get the best or worst sample or specify the wrong key with the accepted arguments.')
+    
     # Extracting information from the dataset
     input = dataset[sample][0]
     target = dataset[sample][1]
