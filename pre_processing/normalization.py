@@ -3,7 +3,7 @@
 import torch
 import copy
 
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import *
 
 from pre_processing.load_datasets import count_pixels 
 
