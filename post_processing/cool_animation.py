@@ -184,6 +184,98 @@ def plot_dem(figure, DEM, boundary_condition, axis, fontsize):
                 clip_on = False, clip_box = plt.gca().transData)
     return None
 
+def plot_loss_per_hour(targets, predictions, axis, loss_f, fontsize):
+    '''
+    Plot the loss per hour based on the choice of loss function, sample and
+    model
+
+    Parameters
+    ----------
+    targets : torch.Tensor
+        Targets of the datset
+    predictions : torch.Tensor
+        Predictions of the model
+    axis : instance of an axes class of matplotlib
+        Subplot that will contain the animated tensor
+    loss_f : str
+             key that specifies the function for computing the loss, 
+             accepts 'MSE' and 'MAE'. If other arguments are set it raises an Exception.
+    fontsize: int
+        Sets the fontsize of the title
+
+    Returns
+    -------
+    None.
+
+    '''
+    features = targets.shape[1]
+    time_steps = targets.shape[0]
+    
+    losses = np.zeros((features, time_steps)) # initialize empty array
+    time_step_array = np.arange(1, time_steps + 1)
+    
+    # compute losses
+    for step in range(time_steps):
+        for feature in range(features):
+            losses[feature, step] = choose_loss(
+                loss_f, predictions[step][feature], targets[step][feature])
+    
+    wd_label, _ = definitions(0)
+    q_label, _ = definitions(1)
+    labels = [wd_label, q_label[:9]] # 9 hardcoded to reduce clutter in graph
+    
+    # Start Plotting
+    axis.set_box_aspect(1)
+    for i in range(features):
+        axis.plot(time_step_array, losses[i], label = labels[i])
+    axis.set_title(loss_f + ' per Hour', fontsize = fontsize, fontweight='bold')
+    axis.set_xlabel('Time steps, hours since breach')
+    axis.set_ylabel('Normalized ' + loss_f + ' [-]')
+    axis.legend()
+    return None
+
+def plot_metric_per_hour(metric, targets, thresholds, axis, fontsize):
+    '''
+    Plot a metric per hour for a given sample of dataset based on a model
+
+    Parameters
+    ----------
+    metric : torch.Tensor
+        Options include recall, f1, and accuracy which can be calculated
+        from confusion mat function
+    targets : torch.Tensor
+        Targets of the dataset
+    thresholds: torch.Tensor
+        Denormalized thresholds for each feature. Expects a tensor that
+        has shape: (1 x num_features).
+    axis : instance of an axes class of matplotlib
+        Subplot that will contain the animated tensor
+    fontsize: int
+        Sets the fontsize of the title
+
+    Returns
+    -------
+    None.
+
+    '''
+    time_steps = targets.shape[0]
+    num_features = targets.shape[1]
+    time_step_array = np.arange(1, time_steps + 1)
+
+    wd_label, _ = definitions(0)
+    q_label, _ = definitions(1)
+    labels = [wd_label, q_label[:9]] # 9 hardcoded to reduce clutter in graph
+    
+    # Start Plotting
+    axis.set_box_aspect(1)
+    for i in range(num_features):
+        axis.plot(time_step_array, metric[i], label = labels[i])
+    axis.set_title(f'Recall/Hour with WD > {thresholds[0, 0]:.2f} m', fontsize = fontsize, fontweight='bold')
+    axis.set_xlabel('Time steps, hours since breach')
+    axis.set_ylabel('Recall [-]')
+    axis.legend()
+    return None
+
 def plot_animation(sample, dataset, model, train_val_test, scaler_x,
                    scaler_y, device='cuda', save=False,
                    thresholds = torch.tensor([0.1, 0]).reshape(1, -1), 
@@ -286,38 +378,13 @@ Set both keys to "None" if you do not want to get the best or worst sample or sp
     plot_dem(fig, elevation, boundary_condition, ax1, fontsize)
 
     # Subplot 4
-    features = target.shape[1]
-    losses = np.zeros((features, time_steps)) # initialize empty array
-    time_step_array = np.arange(1, time_steps + 1)
-    
-    # compute losses
-    for step in range(time_steps):
-        for feature in range(features):
-            losses[feature, step] = choose_loss(loss_f, preds[step][feature], target[step][feature])
-    
-    wd_label, _ = definitions(0)
-    q_label, _ = definitions(1)
-    
-    # Start Plotting
-    ax4.set_box_aspect(1)
-    ax4.plot(time_step_array, losses[0], label = wd_label)
-    ax4.plot(time_step_array, losses[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax4.set_title(loss_f + ' per Hour', fontsize = fontsize, fontweight='bold')
-    ax4.set_xlabel('Time steps, hours since breach')
-    ax4.set_ylabel('Normalized ' + loss_f + ' [-]')
-    ax4.legend()
+    plot_loss_per_hour(target, preds, ax4, loss_f, fontsize)
     
     # Subplot 7
     recall, _, _ = confusion_mat(dataset, model, scaler_y,
                                  device, thresholds, True, sample)
 
-    ax7.set_box_aspect(1)
-    ax7.plot(time_step_array, recall[0], label = wd_label)
-    ax7.plot(time_step_array, recall[1], label = q_label[:9]) # 9 hardcoded to reduce clutter in graph
-    ax7.set_title(f'Recall/Hour with WD > {thresholds[0, 0]:.2f} m', fontsize = fontsize, fontweight='bold')
-    ax7.set_xlabel('Time steps, hours since breach')
-    ax7.set_ylabel('Recall [-]')
-    ax7.legend()
+    plot_metric_per_hour(recall, target, thresholds, ax7, fontsize)
 
     # Subplot 2
     im2 = animated_plot(fig, water_depth, ax2, 'water_depth', fontsize)
