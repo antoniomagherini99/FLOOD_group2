@@ -341,6 +341,4 @@ def plot_best_worst(dataset, model, train_val_test, scaler_x, scaler_y, device,
 
     plot_animation(idx, dataset, model, train_val_test, scaler_x,
                    scaler_y, device, save, thresholds, loss_f)
-    plt.title(f'Sample with {best_worst} performances in terms of {loss_recall}:\n\
-{loss_recall} = {value}')
     return None
