@@ -247,3 +247,6 @@ Everyone: PP presentation, report, other to be discussed.
 01/02/24
 - Lucas and Antonio (8 h)
 1. Training ConvLSTM, final updates, documentation, cleaning up of folders and repository, presentation.
+
+- Carlo de Vito: data processing, UniDepth U-Net, Autoregressive U-Net model, and helped Apostolos with the 48 output version of U-Net. 
+Total hours spent: 55h (10 hours before the midterm presentation and the rest mainly during last week of the presentation).
