@@ -83,7 +83,7 @@ def evaluation(model, loader, device='cpu'):
 
     average_loss = np.mean(losses)
 
-    return average_loss
+    return average_losses
 
 # The class below is used to 
 class CustomDataset(torch.utils.data.Dataset):
