@@ -7,7 +7,7 @@ Group FLOOD2
 - Antonio Magherini - 5838215
 - David Najda - 4651081
 - Apostolos Politis - 5761387
-- Carlo Sobral de Vito - 
+- Carlo Sobral de Vito - 583337
 - Lucas Terlinden-Ruhl - 5863937
 
 **Project title**:
@@ -249,4 +249,4 @@ Everyone: PP presentation, report, other to be discussed.
 1. Training ConvLSTM, final updates, documentation, cleaning up of folders and repository, presentation.
 
 - Carlo de Vito: data processing, UniDepth U-Net, Autoregressive U-Net model, and helped Apostolos with the 48 output version of U-Net. 
-Total hours spent: 55h (10 hours before the midterm presentation and the rest mainly during last week of the presentation).
+Total hours spent: 60h (10 hours before the midterm presentation and the rest mainly during last week of the presentation).
