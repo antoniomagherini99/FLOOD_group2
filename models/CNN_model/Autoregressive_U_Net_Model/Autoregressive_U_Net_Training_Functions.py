@@ -68,27 +68,22 @@ def evaluation(model, loader, device='cpu'):
         for batch in loader:
             x, y = batch
             x, y = x.float().to(device), y.float().to(device)
+
+            input_tensor = x
+
+            for time_step in range(1, y.shape[1]):
            
-            # Determine the number of time steps in the target tensor
-            num_time_steps = y.shape[1]
+                preds = model(input_tensor)
 
-            for time_step in range(num_time_steps):
+                loss = nn.MSELoss()(y[:,time_step:time_step+1,:,:], preds)
 
-                # Model prediction for the current time step
-                preds = model(x)
-                
-                # Update x for the next prediction by replacing the last channel
-                # of the input tensor by the predicted water depth
-                x = torch.cat((x[:, :3, :, :], preds), dim=1)
+                input_tensor = torch.cat((input_tensor[:, :3, :, :], preds), dim=1)
 
-                # Calculate the loss for the current time step
-                loss = nn.MSELoss()(preds, y[:,time_step,:,:])
-                
-                losses.append(loss.item())
+                losses.append(loss.cpu().detach())
 
     average_loss = np.mean(losses)
 
-    return average_loss
+    return average_losses
 
 # The class below is used to 
 class CustomDataset(torch.utils.data.Dataset):
