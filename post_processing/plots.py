@@ -7,7 +7,7 @@ import torch.nn as nn
 
 import os
 import io
-import imageio.v2 as imageio 
+#import imageio.v2 as imageio 
 
 from models.ConvLSTM_model.train_eval import *
 from post_processing.metrics import confusion_mat

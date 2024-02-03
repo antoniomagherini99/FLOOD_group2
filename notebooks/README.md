@@ -1,2 +1,2 @@
-Folder for trained models (in the case of CONVLSTM) and all other notebooks for CNN used in this project. 
-In the case of CONVLSTM, the models are trained in models/conv_lstm folder.
+Folder for trained CONVLSTM models. Two different models: multistep (how a convlstm should be implemented) and single step (interim presentation). To use multistep model, check read me file in model_path to understand which hyperparameters (and scalers) to use for a certain file path. No model path is available in this repository for the single step due to too large file size. Although, if you wish to run locally that notebook you can download the file path [here](https://drive.google.com/drive/folders/1RTRliso_KVhW_aD9iFnHHpvnAeIssdYv?usp=drive_link). To see how models were trained, please look at the convlstm folder within the model folder.
+Also contains the notebooks for CNN used in this project. 

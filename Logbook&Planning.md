@@ -7,17 +7,11 @@ Group FLOOD2
 - Antonio Magherini - 5838215
 - David Najda - 4651081
 - Apostolos Politis - 5761387
-- Carlo Sobral de Vito - 583337
+- Carlo Sobral de Vito - 
 - Lucas Terlinden-Ruhl - 5863937
 
 **Project title**:
 Spatio-temporal flood modelling with Deep Learning
-
-**Background**:
-%%%% to be added
-
-**Objectives**:
-%%%% to be added
 
 **Project planning**:
 Finish first minimum model by week 2.7 before the Mid-term review.
@@ -235,18 +229,33 @@ Everyone: PP presentation, report, other to be discussed.
 29/01/24
 - Antonio (10 h)
 1. Data augmentation, training ConvLSTM, side stuff for post-processing
+- Lucas (6 h)
+2. Debugging, plotting, training ConvLSTM 
 
 30/01/24
-- Antonio (8 h)
+- Lucas and Antonio (8 h)
 1. Final improvement of augmentation function, training ConvLSTM model
+2. Post-processing.
+- David (6 h)
+1. Preparing presentation slides
+2. Progress update meeting to discuss results
+3. Working on CNN model
 
 31/01/24
-- Lucas and Antonio (8 h)
+- Lucas and Antonio (12 h)
 1. Training ConvLSTM with augmentation, updates, documentation, cleaning up of folders and repository, presentation.
+- David (9 h)
+1. Updated repo documentation + README files
+2. Implemented early stopping to CNN model 48 outputs
+3. Training CNN model 48 outputs on CPU
+4. Meeting with Apostolos to discuss changes + schedule ahead
+5. Working on presentation
 
 01/02/24
-- Lucas and Antonio (8 h)
+- Lucas and Antonio (10 h)
 1. Training ConvLSTM, final updates, documentation, cleaning up of folders and repository, presentation.
-
-- Carlo de Vito: data processing, UniDepth U-Net, Autoregressive U-Net model, and helped Apostolos with the 48 output version of U-Net. 
-Total hours spent: 60h (10 hours before the midterm presentation and the rest mainly during last week of the presentation).
+- David (10 h)
+1. Meeting with Apostolos to discuss changes on CNN model 48 outputs + discuss task division
+2. Training CNN model 48 outputs on runpod
+3. Trying to generalize CNN model 48 outputs to dataset 2
+4. Implementing visualization, updating documentation and restructuring functions

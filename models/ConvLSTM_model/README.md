@@ -15,3 +15,9 @@ Some models that can be shown in the trained notebook may be overwritten, theref
 
 # train_eval
 This .py file defines functions for training and validating both ConvLSTM models. It could include other models but it would require minor changes. The <code>obtain_predictions</code> function is used for all the automated post processing functions.
+
+# model_paths
+Trained models can be found in this folder
+
+# scalers
+Since augmentation was different between models, their corresponding scalers can be found here.
